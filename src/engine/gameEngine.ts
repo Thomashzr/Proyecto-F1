@@ -10,14 +10,16 @@ import {
   OpcionEntrenamiento,
   ResultadoFecha,
   ResumenCampeonato,
+  OfertaEquipo,
 } from './types';
 import { createRNG } from './rng';
 import { EQUIPOS_KARTING, EquipoKarting } from '../data/equiposKarting';
 import { CALENDARIOS_POR_CATEGORIA, FechaCalendario } from '../data/calendarios';
+import { generarNombreRival } from '../data/nombresRivales';
+import { EQUIPOS_F1 } from '../data/equipos/equiposF1';
+import { EQUIPOS_F2 } from '../data/equipos/equiposF2';
+import { EQUIPOS_F3, EQUIPOS_FRECA, EQUIPOS_F4, EQUIPOS_FORMULA_NACIONAL } from '../data/equipos/equiposF3';
 
-/**
- * Calcula la Media General (OVR) como promedio de las 6 habilidades de pista, redondeado.
- */
 export function calcularMediaGeneral(stats: PlayerStats): number {
   const suma =
     stats.velocidad +
@@ -29,9 +31,6 @@ export function calcularMediaGeneral(stats: PlayerStats): number {
   return Math.round(suma / 6);
 }
 
-/**
- * Estado inicial por defecto para un nuevo piloto de 9 años.
- */
 export function createInitialState(
   nombre: string,
   nacionalidad = 'Argentina',
@@ -39,6 +38,7 @@ export function createInitialState(
   seed?: string
 ): PlayerState {
   const finalSeed = seed || Math.random().toString(36).substring(2, 9);
+  const rivalNombre = generarNombreRival(finalSeed);
 
   const equipoKartingObj: EquipoKarting =
     EQUIPOS_KARTING.find((e) => e.id === equipoKartingId) || EQUIPOS_KARTING[0];
@@ -46,6 +46,7 @@ export function createInitialState(
   return {
     nombre,
     nacionalidad,
+    rivalNombre,
     edad: 9,
     temporada: 1,
     categoria: 'Karting Regional',
@@ -58,8 +59,8 @@ export function createInitialState(
       defensa: 45,
       gestion: 45,
       consistencia: 45,
-      fama: equipoKartingObj.presupuestoInicial > 50 ? 40 : 30,
-      popularidad: 35,
+      fama: equipoKartingObj.presupuestoInicial > 50 ? 35 : 25,
+      popularidad: 30,
     },
     historial: [],
     finalizado: false,
@@ -71,6 +72,7 @@ export function createInitialState(
     entrenamientosRealizados: 0,
     historialCampeonatos: [],
     campeonatoActualFechas: [],
+    ofertasPendientes: [],
   };
 }
 
@@ -96,9 +98,6 @@ export function evaluarCondicion(stats: PlayerStats, condicion: Condicion): bool
   }
 }
 
-/**
- * Filtra eventos elegibles (excluyendo eventos usados en la temporada actual y únicos vistos).
- */
 export function esEventoElegible(evento: Evento, state: PlayerState): boolean {
   if (evento.esUnico && state.eventosVistos.includes(evento.id)) {
     return false;
@@ -106,6 +105,19 @@ export function esEventoElegible(evento: Evento, state: PlayerState): boolean {
 
   if (state.eventosUsadosTemporadaActual.includes(evento.id)) {
     return false;
+  }
+
+  // Regla Bug 1: Categorías Nacionales solo 1 deportivo + max 1 extradeportivo por temporada
+  const esCategoriaNacional =
+    state.categoria === 'Karting Regional' ||
+    state.categoria === 'Karting Nacional' ||
+    state.categoria === 'Fórmula Nacional';
+
+  if (esCategoriaNacional) {
+    const deportivosUsados = state.historial.filter(
+      (h) => h.temporada === state.temporada && h.categoria === state.categoria
+    ).length;
+    if (evento.tipo === 'deportivo' && deportivosUsados >= 1) return false;
   }
 
   if (evento.categoriaMinima) {
@@ -207,18 +219,19 @@ export function obtenerOpcionesEntrenamiento(state: PlayerState): OpcionEntrenam
   const mezcladas = [...habilidadesBase].sort(() => getRandom() - 0.5);
   const seleccion = mezcladas.slice(0, getRandom() > 0.5 ? 4 : 3);
 
+  // Reducción de delta de entrenamiento a +4 (Bug 2a)
   return seleccion.map((item) => ({
     habilidad: item.key,
     titulo: item.titulo,
     descripcion: item.descripcion,
-    incremento: 7,
+    incremento: 4,
   }));
 }
 
 export function aplicarEntrenamiento(
   state: PlayerState,
   habilidadKey: StatKey,
-  incremento = 7
+  incremento = 4
 ): PlayerState {
   const nuevasStats = { ...state.stats };
   nuevasStats[habilidadKey] = clamp(nuevasStats[habilidadKey] + incremento, 0, 100);
@@ -231,8 +244,76 @@ export function aplicarEntrenamiento(
 }
 
 /**
- * Simula el resultado de una fecha del campeonato no jugada.
+ * Genera 3 ofertas de escudería para la categoría destino (Bug 2b).
  */
+export function generarOfertasEscuderias(
+  state: PlayerState,
+  categoriaDestino: Categoria
+): OfertaEquipo[] {
+  const rngSeed = `${state.seed}_offers_${state.temporada}_${categoriaDestino}`;
+  const getRandom = createRNG(rngSeed);
+
+  let poolEquipos: Array<{ id: string; nombre: string; pais?: string; nivelRendimiento: number }> = [];
+
+  if (categoriaDestino === 'Fórmula 1') {
+    poolEquipos = EQUIPOS_F1;
+  } else if (categoriaDestino === 'FIA Fórmula 2') {
+    poolEquipos = EQUIPOS_F2;
+  } else if (categoriaDestino === 'FIA Fórmula 3') {
+    poolEquipos = EQUIPOS_F3;
+  } else if (categoriaDestino === 'Formula Regional Europea') {
+    poolEquipos = EQUIPOS_FRECA;
+  } else if (categoriaDestino.includes('Fórmula 4')) {
+    poolEquipos = EQUIPOS_F4;
+  } else if (categoriaDestino === 'Fórmula Nacional') {
+    poolEquipos = EQUIPOS_FORMULA_NACIONAL;
+  } else {
+    poolEquipos = EQUIPOS_KARTING.map((e) => ({
+      id: e.id,
+      nombre: e.nombre,
+      pais: 'Argentina',
+      nivelRendimiento: e.calidadIngenieros,
+    }));
+  }
+
+  const mezclados = [...poolEquipos].sort(() => getRandom() - 0.5);
+  const seleccion = mezclados.slice(0, 3);
+
+  return seleccion.map((eq, idx) => ({
+    id: eq.id,
+    nombre: eq.nombre,
+    categoria: categoriaDestino,
+    pais: eq.pais || 'Internacional',
+    nivelRendimiento: eq.nivelRendimiento,
+    expectativas:
+      idx === 0
+        ? 'Pelear Podios y Victorias'
+        : idx === 1
+        ? 'Consistencia y Puntos'
+        : 'Desarrollo de Monoplaza',
+    prestigioFamaBonus: Math.round(eq.nivelRendimiento / 10),
+  }));
+}
+
+/**
+ * Aplica el declive progresivo de habilidades a partir de los 30 años (Bug 4).
+ */
+export function aplicarDecliveEdad(state: PlayerState): PlayerStats {
+  const stats = { ...state.stats };
+  if (state.edad < 30) return stats;
+
+  let decremento = 1;
+  if (state.edad >= 32 && state.edad <= 34) decremento = 2;
+  if (state.edad >= 35) decremento = 3;
+
+  const coreKeys: StatKey[] = ['velocidad', 'lluvia', 'ataque', 'defensa', 'gestion', 'consistencia'];
+  coreKeys.forEach((key) => {
+    stats[key] = clamp(stats[key] - decremento, 0, 100);
+  });
+
+  return stats;
+}
+
 export function simularFechaCarrera(
   state: PlayerState,
   fecha: FechaCalendario
@@ -241,24 +322,21 @@ export function simularFechaCarrera(
   const rngSeed = `${state.seed}_f_${state.temporada}_${fecha.numeroFecha}`;
   const getRandom = createRNG(rngSeed);
 
-  // Ponderar habilidad de lluvia si la fecha es mojada
   let ponderacionEfectiva = ovr;
   if (fecha.esMojado) {
     ponderacionEfectiva = Math.round(ovr * 0.6 + state.stats.lluvia * 0.4);
   }
 
-  // Posición basada en rendimiento (1 a 20)
   const ruido = (getRandom() - 0.5) * 20;
   let score = ponderacionEfectiva + ruido;
   let posicion = Math.max(1, Math.min(20, Math.round(21 - score / 5)));
 
   const pole = posicion === 1 && getRandom() > 0.4;
   const vueltaRapida = posicion <= 3 && getRandom() > 0.5;
-  const abandono = getRandom() < 0.05; // 5% abandono mecánico tenue
+  const abandono = getRandom() < 0.05;
 
   if (abandono) posicion = 20;
 
-  // Puntos F1 / Motorsport estándar
   const tablaPuntos: Record<number, number> = {
     1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1
   };
@@ -277,9 +355,6 @@ export function simularFechaCarrera(
   };
 }
 
-/**
- * Simula la temporada completa resolviendo fechas jugadas y no jugadas.
- */
 export function simularCarrerasRestantes(state: PlayerState): ResumenCampeonato {
   const calendario = CALENDARIOS_POR_CATEGORIA[state.categoria] || CALENDARIOS_POR_CATEGORIA['Karting Regional'];
   const fechasResultados: ResultadoFecha[] = calendario.map((fecha) =>
@@ -293,8 +368,9 @@ export function simularCarrerasRestantes(state: PlayerState): ResumenCampeonato 
   const abandonos = fechasResultados.filter((f) => f.abandono).length;
   const puntosTotales = fechasResultados.reduce((acc, f) => acc + f.puntos, 0);
 
-  // Posición estimada en campeonato (1 a 10)
   const posicionFinal = Math.max(1, Math.min(10, Math.round(11 - puntosTotales / 15)));
+  const siguienteCat = obtenerSiguienteCategoria(state.categoria);
+  const ofertasObj = generarOfertasEscuderias(state, siguienteCat);
 
   return {
     temporada: state.temporada,
@@ -308,25 +384,22 @@ export function simularCarrerasRestantes(state: PlayerState): ResumenCampeonato 
     vueltasRapidas,
     abandonos,
     fechas: fechasResultados,
-    ofertasSiguienteTemporada: [
-      `Oferta renovación ${state.equipo}`,
-      `Propuesta contrato ${obtenerSiguienteCategoria(state.categoria)}`,
-    ],
+    ofertasSiguienteTemporada: ofertasObj,
   };
 }
 
-/**
- * Resolución al cierre de temporada (resetea eventos del año, calcula campeonato y evalúa ascensos).
- */
 export function resolverFinDeTemporada(state: PlayerState): PlayerState {
   const resumenAño = simularCarrerasRestantes(state);
   const ovr = calcularMediaGeneral(state.stats);
+
+  // Aplicar declive de edad a partir de los 30 años (Bug 4)
+  const nuevasStats = aplicarDecliveEdad(state);
 
   let nuevaCategoria = state.categoria;
   const idxActual = CATEGORIAS_ORDEN.indexOf(state.categoria);
 
   // Progresión no lineal según OVR y podios del campeonato
-  if ((ovr >= 52 || resumenAño.posicionFinal <= 3) && idxActual < CATEGORIAS_ORDEN.length - 1) {
+  if ((ovr >= 50 || resumenAño.posicionFinal <= 5) && idxActual < CATEGORIAS_ORDEN.length - 1) {
     nuevaCategoria = CATEGORIAS_ORDEN[idxActual + 1];
   }
 
@@ -334,26 +407,31 @@ export function resolverFinDeTemporada(state: PlayerState): PlayerState {
   let finalizado = state.finalizado;
   let finalObtenido = state.finalObtenido;
 
-  if (nuevaEdad >= 26 && nuevaCategoria !== 'Fórmula 1') {
+  // Límite de edad máxima 38 años (Bug 4)
+  if (nuevaEdad >= 38) {
+    finalizado = true;
+    finalObtenido = 'final-estancado-rendimiento-bajo';
+  } else if (nuevaEdad >= 26 && nuevaCategoria !== 'Fórmula 1' && ovr < 50) {
     finalizado = true;
     finalObtenido = 'final-estancado-inferiores';
   }
 
+  const ofertasGeneradas = generarOfertasEscuderias(state, nuevaCategoria);
+
   return {
     ...state,
+    stats: nuevasStats,
     categoria: nuevaCategoria,
     temporada: state.temporada + 1,
     edad: nuevaEdad,
-    eventosUsadosTemporadaActual: [], // Reset estacional
+    eventosUsadosTemporadaActual: [],
     historialCampeonatos: [...state.historialCampeonatos, resumenAño],
+    ofertasPendientes: ofertasGeneradas,
     finalizado,
     finalObtenido,
   };
 }
 
-/**
- * Aplica la opción elegida por el jugador y actualiza el estado.
- */
 export function aplicarOpcion(
   state: PlayerState,
   evento: Evento,
@@ -370,11 +448,13 @@ export function aplicarOpcion(
   const consecuencias = opcion.consecuencias;
   const nuevasStats: PlayerStats = { ...state.stats };
 
+  // Aplicar deltas reducidos de evento (Bug 2a)
   if (consecuencias.stats) {
     (Object.keys(consecuencias.stats) as StatKey[]).forEach((key) => {
       const delta = consecuencias.stats[key];
       if (typeof delta === 'number') {
-        nuevasStats[key] = clamp(nuevasStats[key] + delta, 0, 100);
+        const deltaAjustado = Math.round(delta * 0.5); // Escalar deltas a valores suaves
+        nuevasStats[key] = clamp(nuevasStats[key] + deltaAjustado, 0, 100);
       }
     });
   }
@@ -392,6 +472,12 @@ export function aplicarOpcion(
   const nuevoJuegoSucioCount =
     state.juegoSucioCount + (consecuencias.incrementaJuegoSucio ? 1 : 0);
 
+  // Reemplazar marcador dinámico {RIVAL} en la narración de resultado
+  const textoResultadoConRival = consecuencias.textoResultado.replace(
+    /Nico Varela|{RIVAL}/g,
+    state.rivalNombre
+  );
+
   let estadoConHistorial: PlayerState = {
     ...state,
     stats: nuevasStats,
@@ -406,7 +492,7 @@ export function aplicarOpcion(
         eventoId: evento.id,
         eventoTitulo: evento.titulo,
         opcionTexto: opcion.texto,
-        textoResultado: consecuencias.textoResultado,
+        textoResultado: textoResultadoConRival,
         statsDeltas: consecuencias.stats || {},
         categoria: state.categoria,
         temporada: state.temporada,

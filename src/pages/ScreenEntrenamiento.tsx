@@ -4,7 +4,7 @@ import { useGameStore } from '../store/useGameStore';
 import { StatKey } from '../engine/types';
 
 export const ScreenEntrenamiento: React.FC = () => {
-  const { playerState, opcionesEntrenamiento, elegirEntrenamiento } = useGameStore();
+  const { playerState, opcionesEntrenamiento, elegirEntrenamiento, solicitarRetiroVoluntario } = useGameStore();
 
   if (!playerState) return null;
 
@@ -18,7 +18,7 @@ export const ScreenEntrenamiento: React.FC = () => {
       >
         <div className="border-b border-asfalto-border pb-4">
           <span className="font-mono text-xs text-telemetria uppercase tracking-widest block font-semibold">
-            PRE-TEMPORADA {playerState.temporada} • {playerState.categoria.toUpperCase()}
+            PRE-TEMPORADA {playerState.temporada} • {playerState.categoria.toUpperCase()} ({playerState.edad} AÑOS)
           </span>
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white tracking-wide mt-1">
             ENTRENAMIENTO INICIAL
@@ -47,6 +47,18 @@ export const ScreenEntrenamiento: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* Retiro Voluntario a partir de los 32 años (Bug 4) */}
+        {playerState.edad >= 32 && (
+          <div className="border-t border-asfalto-border pt-4 text-center">
+            <button
+              onClick={solicitarRetiroVoluntario}
+              className="w-full py-3 bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-300 font-display uppercase tracking-wider font-bold text-sm rounded transition-all"
+            >
+              🏁 ANUNCIAR RETIRO VOLUNTARIO DEL AUTOMOVILISMO ({playerState.edad} AÑOS)
+            </button>
+          </div>
+        )}
       </motion.div>
     </div>
   );

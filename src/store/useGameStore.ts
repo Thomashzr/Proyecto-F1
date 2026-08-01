@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { PlayerState, PlayerStats, Evento, Final, StatKey, OpcionEntrenamiento } from '../engine/types';
+import { PlayerState, PlayerStats, Evento, Final, StatKey, OpcionEntrenamiento, OfertaEquipo } from '../engine/types';
 import {
   createInitialState,
   seleccionarEvento,
@@ -20,14 +20,16 @@ interface GameStore {
     opcionTexto: string;
   } | null;
   opcionesEntrenamiento: OpcionEntrenamiento[];
-  pantallaActual: 'inicio' | 'entrenamiento' | 'juego' | 'resumenTemporada' | 'resultado';
+  pantallaActual: 'inicio' | 'entrenamiento' | 'juego' | 'ofertasEquipos' | 'resumenTemporada' | 'resultado';
 
   // Acciones
   iniciarJuego: (nombrePiloto: string, nacionalidad: string, equipoKartingId: string, seed?: string) => void;
   elegirEntrenamiento: (habilidadKey: StatKey) => void;
+  elegirOfertaEquipo: (oferta: OfertaEquipo) => void;
   elegirOpcion: (opcionIndex: number) => void;
   continuarSiguienteEvento: () => void;
   avanzarDesdeResumenTemporada: () => void;
+  solicitarRetiroVoluntario: () => void;
   reiniciarJuego: () => void;
 }
 
@@ -58,10 +60,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!playerState) return;
 
     const estadoEntrenado = aplicarEntrenamiento(playerState, habilidadKey);
+
+    // Si hay ofertas de equipo pendientes por cambio de categoría o equipo, mostrar pantalla de ofertas
+    if (estadoEntrenado.ofertasPendientes.length > 0) {
+      set({
+        playerState: estadoEntrenado,
+        pantallaActual: 'ofertasEquipos',
+      });
+      return;
+    }
+
     const primerEvento = seleccionarEvento(EVENTOS, estadoEntrenado);
 
     set({
       playerState: estadoEntrenado,
+      eventoActual: primerEvento,
+      pantallaActual: 'juego',
+    });
+  },
+
+  elegirOfertaEquipo: (oferta: OfertaEquipo) => {
+    const { playerState } = get();
+    if (!playerState) return;
+
+    const nuevoEstado: PlayerState = {
+      ...playerState,
+      equipo: oferta.nombre,
+      categoria: oferta.categoria,
+      ofertasPendientes: [],
+    };
+
+    const primerEvento = seleccionarEvento(EVENTOS, nuevoEstado);
+
+    set({
+      playerState: nuevoEstado,
       eventoActual: primerEvento,
       pantallaActual: 'juego',
     });
@@ -84,6 +116,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       playerState: nuevoEstado,
       finalActual: finalObtenidoObj,
+      pantallaActual: finalObtenidoObj ? 'resultado' : 'juego',
       feedbackResultado: {
         textoResultado: opcion.consecuencias.textoResultado,
         statsDeltas: opcion.consecuencias.stats || {},
@@ -101,7 +134,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    // Si terminó la temporada y hay historial de campeonato registrado, mostrar resumen de temporada
     if (playerState.historialCampeonatos.length > 0 && playerState.historial.length % 3 === 0) {
       set({
         feedbackResultado: null,
@@ -138,10 +170,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
+    if (playerState.ofertasPendientes.length > 0) {
+      set({ pantallaActual: 'ofertasEquipos' });
+      return;
+    }
+
     const opcionesEnt = obtenerOpcionesEntrenamiento(playerState);
     set({
       opcionesEntrenamiento: opcionesEnt,
       pantallaActual: 'entrenamiento',
+    });
+  },
+
+  solicitarRetiroVoluntario: () => {
+    const { playerState } = get();
+    if (!playerState) return;
+
+    const finalRetiroObj = FINALES.find((f) => f.id === 'final-quema-mental-abandono') || FINALES[0];
+
+    const estadoFinalizado: PlayerState = {
+      ...playerState,
+      finalizado: true,
+      finalObtenido: finalRetiroObj.id,
+    };
+
+    set({
+      playerState: estadoFinalizado,
+      finalActual: finalRetiroObj,
+      pantallaActual: 'resultado',
     });
   },
 

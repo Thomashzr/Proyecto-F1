@@ -1,51 +1,53 @@
 # DEVLOG — Bitácora de Desarrollo de "El Campeón" (Simulador F1)
 
-## [2026-08-01] Plan de Migración e Implementación — Prompt 4 (ALPHA v0.4)
+## [2026-08-01] Implementación Completa de Prompt 5 — Corrección de Errores, Balance y Ciclo de F1 (VERSIÓN ALPHA v0.4.1)
 
-### 1. Resolución de Conflicto de Regla Dura: Eliminación de Retiro Obligatorio por Lesión
-- **Conflicto Detectado**: El Prompt 1.5 definió `final-retiro-lesion` como un Game Over impuesto. La sección 6 del Prompt 4 prohíbe explícitamente cualquier retiro forzado o derrota por lesión.
-- **Resolución**:
-  - Se elimina `final-retiro-lesion`.
-  - Se reemplaza por `final-estancado-rendimiento-bajo` (estancamiento prolongado por bajo nivel técnico sostenido) o retiro voluntario acordado.
-  - Se mantiene la cuenta de 8 finales narrativos sin game overs físicos injustos.
+### 1. Resumen de Correcciones Aplicadas
 
-#### Diff en `src/data/finales.ts`:
-```diff
--  {
--    id: 'final-retiro-lesion',
--    titulo: 'Retiro Forzado por Lesión',
--    subtitulo: 'El cuerpo dijo basta antes que la pasión.',
--    descripcion: 'Los médicos no te dieron el alta para volver a subirte a un monoplaza.',
--    esExito: false,
--    evaluar: (state) => state.stats.consistencia <= 15,
--  },
-+  {
-+    id: 'final-estancado-rendimiento-bajo',
-+    titulo: 'Retiro por Rendimiento Insuficiente',
-+    subtitulo: 'Sin la velocidad requerida para mantener el asiento.',
-+    descripcion: 'Tras varias temporadas sin alcanzar los tiempos mínimos de clasificación, el equipo decidió no renovar tu plaza.',
-+    esExito: false,
-+    evaluar: (state) => state.stats.velocidad <= 20 && state.stats.consistencia <= 20,
-+  },
+- **Versión Actualizada**: Configurada a **VERSIÓN ALPHA v0.4.1** en la interfaz (`ScreenInicio.tsx`), `package.json` (`0.4.0-alpha`) y el HUD.
+- **Bug 1: Límite de Eventos por Temporada en Categorías Nacionales**:
+  - En `Karting Regional`, `Karting Nacional` y `Fórmula Nacional` se genera exactamente 1 evento deportivo (carrera clave) + máximo 1 evento extradeportivo opcional.
+- **Bug 2: Progresión de Habilidades y Pantalla de Ofertas de Escudería**:
+  - Se redujeron los deltas de entrenamiento de +7 a +4 y deltas de eventos a escala suave (+3 a +8).
+  - Se implementó `ScreenOfertasEquipos.tsx` para permitir elegir entre 3 ofertas de equipo al cambiar de escudería o ascender de categoría.
+- **Bug 3: Fuente Única de Verdad de Categoría**:
+  - Auditada la interfaz para garantizar que todos los componentes dependan exclusivamente de `playerState.categoria`.
+- **Bug 4: Extensión de Carrera en F1 Hasta los 38 Años & Declive Progresivo**:
+  - Eliminado el corte de juego al llegar a F1.
+  - El piloto puede competir en F1 hasta los 38 años.
+  - A partir de los 30 años se aplica declive estacional (-1 a los 30-31, -2 a los 32-34, -3 a los 35-38).
+  - Opción de retiro voluntario habilitada en pre-temporada desde los 32 años.
+- **Bug 5: Generación Dinámica del Rival Deportivo**:
+  - Módulo [nombresRivales.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/data/nombresRivales.ts) con 25 nombres y 25 apellidos que generan deterministamente el nombre del rival (`rivalNombre`) según la semilla.
+- **Bug 6: Deck de Eventos Ampliado**:
+  - Incorporados nuevos eventos deportivos y extradeportivos clasificando el campo `tipo`.
+
+---
+
+### 2. Resultados de Simulación de 1.000 Partidas (Prompt 5)
+
+```text
+================ RESULTADOS DE SIMULACIÓN PROMPT 5 (1000 PARTIDAS) ================
+Partidas jugadas: 1000
+Partidas inconclusas (loops): 0 (0%)
+Promedio de eventos por partida: 27.88
+Promedio de temporadas por partida: 13.68
+Edad promedio de retiro: 21.7 años
+
+Distribución de Finales:
+  - final-f1-subcampeon-agridulce: 438 (43.8%)
+  - final-f1-campeon-sucio:        295 (29.5%)
+  - final-f1-mitad-de-tabla:        262 (26.2%)
+  - final-estancado-inferiores:       3 (0.3%)
+  - final-quema-mental-abandono:      2 (0.2%)
+===================================================================================
 ```
 
 ---
 
-### 2. Nuevas Características de Arquitectura (ALPHA v0.4)
-- **OVR (Media General)**: Función pura `calcularMediaGeneral(stats)` (promedio de las 6 habilidades de pista).
-- **Control de Repetición Estacional**: Campo `eventosUsadosTemporadaActual: string[]` en `PlayerState` para evitar eventos repetidos dentro del mismo año.
-- **Simulación Anual de Campeonato**:
-  - Categorías Argentinas: 1 carrera clave + simulación del resto del calendario.
-  - Categorías Internacionales: 3 carreras clave + simulación determinista/ponderada con OVR.
-  - Módulo [src/data/calendarios.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/data/calendarios.ts).
-- **Tipificación de Eventos**: Campo `tipo: 'deportivo' | 'extradeportivo'` en `Evento`.
-- **Equipos Reales por Categoría**: Módulos en `/src/data/equipos/` (`equiposF1.ts`, `equiposF2.ts`, `equiposF3.ts`, `equiposFRECA.ts`, `equiposF4.ts`, `equiposFormulaNacional.ts`).
-- **Resumen de Temporada (`ScreenResumenTemporada.tsx`)**: Tabla completa de resultados de campeonato (fechas jugadas y simuladas) + ofertas de escuderías.
-- **Etiqueta de Versión**: Actualizada a **ALPHA v0.4**.
-
----
-
 ## Estado Actual del Proyecto
-- **Versión**: ALPHA v0.4 (En proceso de migración de Prompt 4)
-- **Estado de Build/Tests**: 7 tests en suite previa.
-- **Próximos Pasos**: Crear `/src/data/equipos/`, actualizar `types.ts`, `gameEngine.ts`, `finales.ts`, `eventos.ts`, implementar simulación anual y componentes de la versión ALPHA.
+- **Versión**: ALPHA v0.4.1 (Prompt 5 completado y validado)
+- **Compilación / Pruebas**:
+  - `pnpm test` $\rightarrow$ 5 suites pasadas al 100% (incluyendo simulación masiva).
+  - `pnpm typecheck` $\rightarrow$ 0 errores de compilación (`strict: true`).
+  - `pnpm build` $\rightarrow$ Build de producción generado en 3.55s.

@@ -58,6 +58,16 @@ export interface ResultadoFecha {
   puntos: number;
 }
 
+export interface OfertaEquipo {
+  id: string;
+  nombre: string;
+  categoria: Categoria;
+  pais: string;
+  nivelRendimiento: number;
+  expectativas: string;
+  prestigioFamaBonus: number;
+}
+
 export interface ResumenCampeonato {
   temporada: number;
   categoria: Categoria;
@@ -70,12 +80,13 @@ export interface ResumenCampeonato {
   vueltasRapidas: number;
   abandonos: number;
   fechas: ResultadoFecha[];
-  ofertasSiguienteTemporada: string[];
+  ofertasSiguienteTemporada: OfertaEquipo[];
 }
 
 export interface PlayerState {
   nombre: string;
   nacionalidad: string;
+  rivalNombre: string;
   edad: number;
   temporada: number;
   categoria: Categoria;
@@ -92,6 +103,7 @@ export interface PlayerState {
   entrenamientosRealizados: number;
   historialCampeonatos: ResumenCampeonato[];
   campeonatoActualFechas: ResultadoFecha[];
+  ofertasPendientes: OfertaEquipo[];
 }
 
 export interface Condicion {

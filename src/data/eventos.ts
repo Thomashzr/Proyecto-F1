@@ -2,7 +2,7 @@ import { Evento } from '../engine/types';
 
 export const EVENTOS: Evento[] = [
   // ==========================================
-  // KARTING REGIONAL Y KARTING NACIONAL
+  // KARTING REGIONAL Y KARTING NACIONAL (Edad 9-14)
   // ==========================================
   {
     id: 'karting-01-chasis-prestado',
@@ -16,15 +16,15 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Meter mano al carburador solo en el parque cerrado',
         consecuencias: {
-          stats: { velocidad: 8, gestion: -4 },
+          stats: { velocidad: 4, gestion: -2 },
           textoResultado: 'Carburaste justo a tiempo. El motor respondió y metiste el 3er mejor tiempo de tanda.',
         },
       },
       {
-        texto: 'Pedirle repuestos prestados a la familia de Nico Varela',
+        texto: 'Pedirle repuestos prestados a la familia de {RIVAL}',
         consecuencias: {
-          stats: { fama: 5, popularidad: 8 },
-          textoResultado: 'El padre de Nico Varela te prestó un chiclé de baja. Quedás en deuda moral pero clasificás bien.',
+          stats: { fama: 3, popularidad: 5 },
+          textoResultado: 'La familia de {RIVAL} te prestó un chiclé de baja. Quedás en deuda moral pero clasificás bien.',
         },
       },
     ],
@@ -41,14 +41,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Largar con cubiertas lisas gastadas y controlar con la mano al aire',
         consecuencias: {
-          stats: { lluvia: 12, consistencia: -5 },
+          stats: { lluvia: 6, consistencia: -3 },
           textoResultado: 'Fue una lección magistral de control en mojado. Saliste 2do trompeando en la última curva.',
         },
       },
       {
         texto: 'Hipotecar ahorros familiares para comprar gomas de lluvia usadas',
         consecuencias: {
-          stats: { gestion: 10, popularidad: 5 },
+          stats: { gestion: 5, popularidad: 3 },
           textoResultado: 'Ganas la carrera holgado, pero la discusión financiera en casa fue dura.',
         },
       },
@@ -60,15 +60,15 @@ export const EVENTOS: Evento[] = [
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
     peso: 20,
-    personajeRecurrente: 'Nico Varela',
+    personajeRecurrente: '{RIVAL}',
     esUnico: true,
-    titulo: 'Toque con Nico Varela en la chicana',
-    descripcion: 'Nico Varela, el chico adinerado del equipo oficial, te frena el karting en el apéndice de la chicana para taparte el radio de curva.',
+    titulo: 'Toque con {RIVAL} en la chicana',
+    descripcion: '{RIVAL}, el chico adinerado del equipo oficial, te frena el karting en el apéndice de la chicana para taparte el radio de curva.',
     opciones: [
       {
         texto: 'Tirarle el pontón en la horquilla de entrada a meta',
         consecuencias: {
-          stats: { ataque: 10, popularidad: -5 },
+          stats: { ataque: 5, popularidad: -3 },
           incrementaJuegoSucio: true,
           textoResultado: 'Lo dejaste cruzado sobre el piano. Saliste campeón regional, pero te ganaste un enemigo de por vida.',
         },
@@ -76,8 +76,8 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Cruzar el kart por la huella limpia y esperar el error',
         consecuencias: {
-          stats: { defensa: 10, consistencia: 8 },
-          textoResultado: 'Varela se pasó de frenada dos vueltas después. Cruzaste la meta victorioso y con aplausos del comisariato.',
+          stats: { defensa: 5, consistencia: 4 },
+          textoResultado: '{RIVAL} se pasó de frenada dos vueltas después. Cruzaste la meta victorioso y con aplausos del comisariato.',
         },
       },
     ],
@@ -94,14 +94,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Cargar el karting en el baúl del auto familiar sacrificando el equipaje',
         consecuencias: {
-          stats: { consistencia: 8, popularidad: 10 },
+          stats: { consistencia: 4, popularidad: 5 },
           textoResultado: 'Llegaron a las 7:55 AM destruidos de fatiga, pero listos para la técnica.',
         },
       },
       {
         texto: 'Pagar un remolque de auxilio con los últimos ahorros de la inscripción',
         consecuencias: {
-          stats: { fama: 5, gestion: -10 },
+          stats: { fama: 3, gestion: -5 },
           textoResultado: 'Llegaron a tiempo, pero entraron a la carrera sin un solo peso para repuestos.',
         },
       },
@@ -121,16 +121,41 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Aceptar el ascenso a Karting Nacional',
         consecuencias: {
-          stats: { fama: 15, velocidad: 8 },
+          stats: { fama: 8, velocidad: 4 },
           avanzaCategoria: true,
           textoResultado: '¡Ascendés a Karting Nacional! Los circuitos son más exigentes y la competencia es implacable.',
         },
       },
     ],
   },
+  {
+    id: 'karting-06-motor-preparador',
+    tipo: 'extradeportivo',
+    categoriaMinima: 'Karting Regional',
+    categoriaMaxima: 'Karting Nacional',
+    peso: 15,
+    titulo: 'Motor preparado por un histórico de la zonal',
+    descripcion: 'Un legendario preparador de motores te ofrece una tapa de cilindros trabajada en su taller artesanal.',
+    opciones: [
+      {
+        texto: 'Aceptar el motor preparado y probar la potencia en rectas',
+        consecuencias: {
+          stats: { velocidad: 5, gestion: 3 },
+          textoResultado: 'El motor vuela en alta. Lográs tiempos de punta en las tandas libres.',
+        },
+      },
+      {
+        texto: 'Mantener la mecánica estándar para priorizar fiabilidad',
+        consecuencias: {
+          stats: { consistencia: 5, defensa: 3 },
+          textoResultado: 'El motor no falla nunca. Rescatás podios constantes.',
+        },
+      },
+    ],
+  },
 
   // ==========================================
-  // FÓRMULA NACIONAL Y FÓRMULA 4
+  // FÓRMULA NACIONAL Y FÓRMULA 4 BRASIL / ESPAÑA / ITALIA
   // ==========================================
   {
     id: 'f4-01-primer-test-monoplaza',
@@ -144,14 +169,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Exigir el cuello al máximo sin pedir parar en boxes',
         consecuencias: {
-          stats: { velocidad: 10, consistencia: 5 },
+          stats: { velocidad: 5, consistencia: 3 },
           textoResultado: 'Te bajaste del auto dolorido, pero los ingenieros amaron tu tenacidad.',
         },
       },
       {
         texto: 'Parar cada 5 vueltas para calibrar la postura con el fisio',
         consecuencias: {
-          stats: { gestion: 10, consistencia: 8 },
+          stats: { gestion: 5, consistencia: 4 },
           textoResultado: 'Aprendiste a cuidar el físico en curvas de alta velocidad.',
         },
       },
@@ -169,14 +194,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Tragar saliva, hacer el spot y sonreír para las redes',
         consecuencias: {
-          stats: { fama: 25, popularidad: -5 },
+          stats: { fama: 12, popularidad: -2 },
           textoResultado: 'El video se volvió viral. Pasaste vergüenza pero aseguraste presupuesto publicitario.',
         },
       },
       {
         texto: 'Negarte rotundamente aduciendo dignidad deportiva',
         consecuencias: {
-          stats: { popularidad: 15, fama: -10 },
+          stats: { popularidad: 8, fama: -5 },
           textoResultado: 'El público apreció tu postura, aunque el patrocinador redujo presupuesto.',
         },
       },
@@ -194,14 +219,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Asumir la culpa con el equipo e ir al médico de pista',
         consecuencias: {
-          stats: { consistencia: 10, popularidad: 10 },
+          stats: { consistencia: 5, popularidad: 5 },
           textoResultado: 'Te hicieron placas de tórax. El equipo valora tu honestidad.',
         },
       },
       {
         texto: 'Echarle la culpa a una supuesta falla del sensor de frenos',
         consecuencias: {
-          stats: { fama: -15, popularidad: -10 },
+          stats: { fama: -8, popularidad: -5 },
           textoResultado: 'La telemetría demostró que bloqueaste vos. Perdiste reputación en los pits.',
         },
       },
@@ -213,22 +238,22 @@ export const EVENTOS: Evento[] = [
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
     peso: 18,
-    personajeRecurrente: 'Nico Varela',
+    personajeRecurrente: '{RIVAL}',
     esUnico: true,
-    titulo: 'Nico Varela reaparece en F4',
-    descripcion: 'Varela reaparece con el equipo líder. En la conferencia de prensa dice que vos sólo estás ahí por suerte.',
+    titulo: '{RIVAL} reaparece en F4',
+    descripcion: '{RIVAL} reaparece con el equipo líder. En la conferencia de prensa dice que vos sólo estás ahí por suerte.',
     opciones: [
       {
         texto: 'Responder en pista haciéndole un sobrepaso por fuera en el Curvón',
         consecuencias: {
-          stats: { ataque: 12, velocidad: 10 },
+          stats: { ataque: 6, velocidad: 5 },
           textoResultado: 'Le metiste un sobrepaso quirúrgico que salió en los resúmenes de televisión.',
         },
       },
       {
         texto: 'Encerrarlo contra el muro del box en la salida de clasificatoria',
         consecuencias: {
-          stats: { defensa: 8, popularidad: -10 },
+          stats: { defensa: 4, popularidad: -5 },
           incrementaJuegoSucio: true,
           textoResultado: 'Los comisarios te apercibieron. Tensión al máximo en los boxes.',
         },
@@ -247,14 +272,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Acatar la orden y frenar unos metros antes de la línea',
         consecuencias: {
-          stats: { consistencia: 15, popularidad: -5 },
+          stats: { consistencia: 8, popularidad: -3 },
           textoResultado: 'Hiciste el trabajo sucio. El dueño del equipo te prometió prioridad para el próximo año.',
         },
       },
       {
         texto: 'Simular falla de radio ("Radio check, no los escucho") y ganar',
         consecuencias: {
-          stats: { velocidad: 8, fama: 15, popularidad: -15 },
+          stats: { velocidad: 4, fama: 8, popularidad: -8 },
           textoResultado: 'Ganaste la carrera. Festejaste solo en el podio mientras el box ardía.',
         },
       },
@@ -274,7 +299,7 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Firmar con el equipo de FRECA y mudar tus pertenencias a Europa',
         consecuencias: {
-          stats: { fama: 20, velocidad: 10 },
+          stats: { fama: 10, velocidad: 5 },
           avanzaCategoria: true,
           cambioEquipo: 'ART Grand Prix FRECA',
           textoResultado: 'Armás las valijas. Estás en la antesala real de la Fórmula 3.',
@@ -298,14 +323,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Soltar el acelerador 50 metros antes y buscar tracción por fuera',
         consecuencias: {
-          stats: { lluvia: 15, consistencia: 10 },
+          stats: { lluvia: 8, consistencia: 5 },
           textoResultado: 'Espectacular lección de manejo sobre agua. Ganás 4 posiciones.',
         },
       },
       {
         texto: 'Cerrar los ojos, mantener el pie a fondo y confiar en el difusor',
         consecuencias: {
-          stats: { velocidad: 10, consistencia: -15 },
+          stats: { velocidad: 5, consistencia: -8 },
           textoResultado: 'Terminaste en el paredón de Stowe destruyendo la suspensión delantera.',
         },
       },
@@ -318,19 +343,19 @@ export const EVENTOS: Evento[] = [
     categoriaMaxima: 'FIA Fórmula 2',
     peso: 15,
     titulo: 'Sospechas sobre la telemetría del equipo',
-    descripcion: 'Descubrís que el ingeniero jefe le entrega tus mapas de aceleración y puntos de frenada a Nico Varela, tu compañero de equipo.',
+    descripcion: 'Descubrís que el ingeniero jefe le entrega tus mapas de aceleración y puntos de frenada a {RIVAL}, tu compañero de equipo.',
     opciones: [
       {
         texto: 'Guardarte un secreto de trazada para las rondas finales',
         consecuencias: {
-          stats: { velocidad: 10, gestion: 8 },
-          textoResultado: 'En la clasificación abriste la trazada en el sector 2 y le sacaste 3 décimas a Varela.',
+          stats: { velocidad: 5, gestion: 4 },
+          textoResultado: 'En la clasificación abriste la trazada en el sector 2 y le sacaste 3 décimas a {RIVAL}.',
         },
       },
       {
         texto: 'Enfrentar al director de equipo delante de los mecánicos',
         consecuencias: {
-          stats: { popularidad: -15, fama: 10 },
+          stats: { popularidad: -8, fama: 5 },
           textoResultado: 'Un escándalo en los boxes. La relación con los ingenieros quedó sumamente tirante.',
         },
       },
@@ -348,7 +373,7 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Aceptar colocar el alerón clandestino',
         consecuencias: {
-          stats: { velocidad: 12, popularidad: -15 },
+          stats: { velocidad: 6, popularidad: -8 },
           incrementaJuegoSucio: true,
           textoResultado: 'Ganaste la pole por amplio margen, aunque en el paddock se rumorea tu trampa.',
         },
@@ -356,7 +381,7 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Exigir correr 100% legal respetando la reglamentación',
         consecuencias: {
-          stats: { popularidad: 20, consistencia: 10 },
+          stats: { popularidad: 10, consistencia: 5 },
           textoResultado: 'Mantuviste el honor intacto. Tu reputación de piloto limpio crece entre los jefes de F1.',
         },
       },
@@ -376,7 +401,7 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Firmar contrato de F1 y cumplir el sueño de toda tu vida',
         consecuencias: {
-          stats: { fama: 35, popularidad: 25 },
+          stats: { fama: 18, popularidad: 12 },
           avanzaCategoria: true,
           cambioEquipo: 'Williams Racing F1',
           textoResultado: '¡LLEGASTE A LA FÓRMULA 1! Tu nombre estará en las grillas oficiales.',
@@ -401,14 +426,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Aprovechar el hueco interno entre dos autos para avanzar 3 puestos',
         consecuencias: {
-          stats: { ataque: 15, velocidad: 15, fama: 20 },
+          stats: { ataque: 8, velocidad: 8, fama: 10 },
           textoResultado: '¡Debut de ensueño! Sumás tus primeros puntos en la máxima categoría.',
         },
       },
       {
         texto: 'Mantener la cautela y asegurar terminar la primera carrera limpia',
         consecuencias: {
-          stats: { consistencia: 20, gestion: 15 },
+          stats: { consistencia: 10, gestion: 8 },
           textoResultado: 'Llevaste el auto a boxes sin un solo rasguño. El equipo aplaude tu madurez.',
         },
       },
@@ -426,14 +451,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Denunciarlo en los micrófonos internacionales de la transmisión',
         consecuencias: {
-          stats: { fama: 20, popularidad: -15 },
+          stats: { fama: 10, popularidad: -8 },
           textoResultado: 'Guerra civil desatada en la escudería. Las fotos tuyas y de tu compañero ocupan todas las portadas.',
         },
       },
       {
         texto: 'Demostrarle quién manda superándolo en el primer frenaje de carrera',
         consecuencias: {
-          stats: { ataque: 15, defensa: 15 },
+          stats: { ataque: 8, defensa: 8 },
           textoResultado: 'Le metiste el auto en la chicana sin dudar. El mensaje quedó clarísimo en la pista.',
         },
       },
@@ -451,14 +476,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Pedir el paquete de velocidad punta agresivo para sobrepasos',
         consecuencias: {
-          stats: { velocidad: 15, ataque: 10 },
+          stats: { velocidad: 8, ataque: 5 },
           textoResultado: 'El auto se volvió una bestia en las rectas. Lográs velocidades récord de punta.',
         },
       },
       {
         texto: 'Pedir el paquete dócil y equilibrado que cuida los neumáticos',
         consecuencias: {
-          stats: { gestion: 20, consistencia: 15 },
+          stats: { gestion: 10, consistencia: 8 },
           textoResultado: 'Tus ritmos de carrera son los más consistentes de la parrilla.',
         },
       },
@@ -477,14 +502,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Pisar el acelerador un 5% antes en la salida hacia la recta de meta',
         consecuencias: {
-          stats: { velocidad: 25, fama: 30 },
+          stats: { velocidad: 12, fama: 15 },
           textoResultado: '¡POLE POSITION EN MÓNACO! Una de las vueltas clasificatorias más hermosas de la década.',
         },
       },
       {
         texto: 'Asegurar sin arriesgar a besarte la pared',
         consecuencias: {
-          stats: { consistencia: 15, gestion: 10 },
+          stats: { consistencia: 8, gestion: 5 },
           textoResultado: 'Asegurás el 2do lugar en primera fila. Gran posición para la carrera.',
         },
       },
@@ -502,7 +527,7 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Mantener la línea y apretar el choque (si quedamos afuera los dos, sigo arriba)',
         consecuencias: {
-          stats: { defensa: 15, popularidad: -25 },
+          stats: { defensa: 8, popularidad: -12 },
           incrementaJuegoSucio: true,
           textoResultado: 'Choque espectacular. Ambos fuera de carrera. Mantuviste la ventaja de puntos pero bajo abucheos.',
         },
@@ -510,7 +535,7 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Esquivar por la escapatoria sacrificando la posición',
         consecuencias: {
-          stats: { popularidad: 25, consistencia: 10 },
+          stats: { popularidad: 12, consistencia: 5 },
           textoResultado: 'Mantenés el auto sano. Perdiste la punta hoy pero la caballerosidad deportiva te enaltece.',
         },
       },
@@ -530,14 +555,14 @@ export const EVENTOS: Evento[] = [
       {
         texto: 'Manejar como un poseso sin soltar el acelerador en el Curvón',
         consecuencias: {
-          stats: { velocidad: 25, lluvia: 25, fama: 35 },
+          stats: { velocidad: 12, lluvia: 12, fama: 18 },
           textoResultado: '¡CRUZÁS LA META EN PRIMER LUGAR! El grito sagrado recorre el mundo.',
         },
       },
       {
         texto: 'Jugar sucio cerrándole el paso en boxes a tu perseguidor',
         consecuencias: {
-          stats: { defensa: 15, popularidad: -20 },
+          stats: { defensa: 8, popularidad: -10 },
           incrementaJuegoSucio: true,
           textoResultado: 'Cruzás la meta envuelto en protestas reglamentarias y reclamos técnicos.',
         },
