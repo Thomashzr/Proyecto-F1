@@ -8,9 +8,26 @@ import {
   Condicion,
   StatKey,
   OpcionEntrenamiento,
+  ResultadoFecha,
+  ResumenCampeonato,
 } from './types';
 import { createRNG } from './rng';
 import { EQUIPOS_KARTING, EquipoKarting } from '../data/equiposKarting';
+import { CALENDARIOS_POR_CATEGORIA, FechaCalendario } from '../data/calendarios';
+
+/**
+ * Calcula la Media General (OVR) como promedio de las 6 habilidades de pista, redondeado.
+ */
+export function calcularMediaGeneral(stats: PlayerStats): number {
+  const suma =
+    stats.velocidad +
+    stats.lluvia +
+    stats.ataque +
+    stats.defensa +
+    stats.gestion +
+    stats.consistencia;
+  return Math.round(suma / 6);
+}
 
 /**
  * Estado inicial por defecto para un nuevo piloto de 9 años.
@@ -22,8 +39,7 @@ export function createInitialState(
   seed?: string
 ): PlayerState {
   const finalSeed = seed || Math.random().toString(36).substring(2, 9);
-  
-  // Buscar equipo de Karting o tomar por defecto el primero
+
   const equipoKartingObj: EquipoKarting =
     EQUIPOS_KARTING.find((e) => e.id === equipoKartingId) || EQUIPOS_KARTING[0];
 
@@ -49,22 +65,19 @@ export function createInitialState(
     finalizado: false,
     finalObtenido: null,
     eventosVistos: [],
+    eventosUsadosTemporadaActual: [],
     seed: finalSeed,
     juegoSucioCount: 0,
     entrenamientosRealizados: 0,
+    historialCampeonatos: [],
+    campeonatoActualFechas: [],
   };
 }
 
-/**
- * Clampea un valor entre un mínimo y un máximo.
- */
 export function clamp(value: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, value));
 }
 
-/**
- * Evalúa si una condición se cumple con las stats actuales del piloto.
- */
 export function evaluarCondicion(stats: PlayerStats, condicion: Condicion): boolean {
   const valorActual = stats[condicion.stat];
   switch (condicion.operador) {
@@ -84,29 +97,29 @@ export function evaluarCondicion(stats: PlayerStats, condicion: Condicion): bool
 }
 
 /**
- * Revisa si un evento es elegible para el jugador en su estado actual.
+ * Filtra eventos elegibles (excluyendo eventos usados en la temporada actual y únicos vistos).
  */
 export function esEventoElegible(evento: Evento, state: PlayerState): boolean {
-  // Si es único y ya ocurrió
   if (evento.esUnico && state.eventosVistos.includes(evento.id)) {
     return false;
   }
 
-  // Filtrar por categoría mínima
+  if (state.eventosUsadosTemporadaActual.includes(evento.id)) {
+    return false;
+  }
+
   if (evento.categoriaMinima) {
     const idxActual = CATEGORIAS_ORDEN.indexOf(state.categoria);
     const idxMin = CATEGORIAS_ORDEN.indexOf(evento.categoriaMinima);
     if (idxActual < idxMin) return false;
   }
 
-  // Filtrar por categoría máxima
   if (evento.categoriaMaxima) {
     const idxActual = CATEGORIAS_ORDEN.indexOf(state.categoria);
     const idxMax = CATEGORIAS_ORDEN.indexOf(evento.categoriaMaxima);
     if (idxActual > idxMax) return false;
   }
 
-  // Filtrar por condiciones de stats
   if (evento.condiciones && evento.condiciones.length > 0) {
     const cumplenTodas = evento.condiciones.every((cond) =>
       evaluarCondicion(state.stats, cond)
@@ -117,10 +130,6 @@ export function esEventoElegible(evento: Evento, state: PlayerState): boolean {
   return true;
 }
 
-/**
- * Selecciona un evento aleatorio de la lista elegible ponderando por su peso.
- * Utiliza un PRNG determinista basado en el seed del estado y la longitud del historial.
- */
 export function seleccionarEvento(
   eventos: Evento[],
   state: PlayerState
@@ -146,9 +155,6 @@ export function seleccionarEvento(
   return elegibles[elegibles.length - 1];
 }
 
-/**
- * Avanza a la siguiente categoría en la jerarquía.
- */
 export function obtenerSiguienteCategoria(catActual: Categoria): Categoria {
   const idx = CATEGORIAS_ORDEN.indexOf(catActual);
   if (idx >= 0 && idx < CATEGORIAS_ORDEN.length - 1) {
@@ -157,9 +163,6 @@ export function obtenerSiguienteCategoria(catActual: Categoria): Categoria {
   return catActual;
 }
 
-/**
- * Genera 3 o 4 opciones de entrenamiento únicas de las 6 habilidades principales.
- */
 export function obtenerOpcionesEntrenamiento(state: PlayerState): OpcionEntrenamiento[] {
   const habilidadesBase: Array<{
     key: keyof Pick<PlayerStats, 'velocidad' | 'lluvia' | 'ataque' | 'defensa' | 'gestion' | 'consistencia'>;
@@ -201,7 +204,6 @@ export function obtenerOpcionesEntrenamiento(state: PlayerState): OpcionEntrenam
   const rngSeed = `${state.seed}_train_${state.temporada}`;
   const getRandom = createRNG(rngSeed);
 
-  // Mezclar array deterministamente y seleccionar 3 o 4
   const mezcladas = [...habilidadesBase].sort(() => getRandom() - 0.5);
   const seleccion = mezcladas.slice(0, getRandom() > 0.5 ? 4 : 3);
 
@@ -213,9 +215,6 @@ export function obtenerOpcionesEntrenamiento(state: PlayerState): OpcionEntrenam
   }));
 }
 
-/**
- * Aplica la opción de entrenamiento elegida antes de arrancar la temporada.
- */
 export function aplicarEntrenamiento(
   state: PlayerState,
   habilidadKey: StatKey,
@@ -232,23 +231,102 @@ export function aplicarEntrenamiento(
 }
 
 /**
- * Resolución no lineal al cierre de temporada (evalúa permanencia, cambio de equipo o ascenso).
+ * Simula el resultado de una fecha del campeonato no jugada.
+ */
+export function simularFechaCarrera(
+  state: PlayerState,
+  fecha: FechaCalendario
+): ResultadoFecha {
+  const ovr = calcularMediaGeneral(state.stats);
+  const rngSeed = `${state.seed}_f_${state.temporada}_${fecha.numeroFecha}`;
+  const getRandom = createRNG(rngSeed);
+
+  // Ponderar habilidad de lluvia si la fecha es mojada
+  let ponderacionEfectiva = ovr;
+  if (fecha.esMojado) {
+    ponderacionEfectiva = Math.round(ovr * 0.6 + state.stats.lluvia * 0.4);
+  }
+
+  // Posición basada en rendimiento (1 a 20)
+  const ruido = (getRandom() - 0.5) * 20;
+  let score = ponderacionEfectiva + ruido;
+  let posicion = Math.max(1, Math.min(20, Math.round(21 - score / 5)));
+
+  const pole = posicion === 1 && getRandom() > 0.4;
+  const vueltaRapida = posicion <= 3 && getRandom() > 0.5;
+  const abandono = getRandom() < 0.05; // 5% abandono mecánico tenue
+
+  if (abandono) posicion = 20;
+
+  // Puntos F1 / Motorsport estándar
+  const tablaPuntos: Record<number, number> = {
+    1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1
+  };
+  const puntos = (tablaPuntos[posicion] || 0) + (vueltaRapida && posicion <= 10 ? 1 : 0);
+
+  return {
+    numeroFecha: fecha.numeroFecha,
+    nombreGranPremio: fecha.nombreGranPremio,
+    circuito: fecha.circuito,
+    posicion,
+    pole,
+    vueltaRapida,
+    abandono,
+    esCarreraClave: fecha.esCarreraClave,
+    puntos,
+  };
+}
+
+/**
+ * Simula la temporada completa resolviendo fechas jugadas y no jugadas.
+ */
+export function simularCarrerasRestantes(state: PlayerState): ResumenCampeonato {
+  const calendario = CALENDARIOS_POR_CATEGORIA[state.categoria] || CALENDARIOS_POR_CATEGORIA['Karting Regional'];
+  const fechasResultados: ResultadoFecha[] = calendario.map((fecha) =>
+    simularFechaCarrera(state, fecha)
+  );
+
+  const victorias = fechasResultados.filter((f) => f.posicion === 1).length;
+  const podios = fechasResultados.filter((f) => f.posicion <= 3).length;
+  const poles = fechasResultados.filter((f) => f.pole).length;
+  const vueltasRapidas = fechasResultados.filter((f) => f.vueltaRapida).length;
+  const abandonos = fechasResultados.filter((f) => f.abandono).length;
+  const puntosTotales = fechasResultados.reduce((acc, f) => acc + f.puntos, 0);
+
+  // Posición estimada en campeonato (1 a 10)
+  const posicionFinal = Math.max(1, Math.min(10, Math.round(11 - puntosTotales / 15)));
+
+  return {
+    temporada: state.temporada,
+    categoria: state.categoria,
+    equipo: state.equipo || 'Independiente',
+    posicionFinal,
+    puntosTotales,
+    victorias,
+    podios,
+    poles,
+    vueltasRapidas,
+    abandonos,
+    fechas: fechasResultados,
+    ofertasSiguienteTemporada: [
+      `Oferta renovación ${state.equipo}`,
+      `Propuesta contrato ${obtenerSiguienteCategoria(state.categoria)}`,
+    ],
+  };
+}
+
+/**
+ * Resolución al cierre de temporada (resetea eventos del año, calcula campeonato y evalúa ascensos).
  */
 export function resolverFinDeTemporada(state: PlayerState): PlayerState {
-  const rendimientoPromedio =
-    (state.stats.velocidad +
-      state.stats.consistencia +
-      state.stats.ataque +
-      state.stats.defensa +
-      state.stats.lluvia +
-      state.stats.gestion) /
-    6;
+  const resumenAño = simularCarrerasRestantes(state);
+  const ovr = calcularMediaGeneral(state.stats);
 
   let nuevaCategoria = state.categoria;
   const idxActual = CATEGORIAS_ORDEN.indexOf(state.categoria);
 
-  // Progresión no lineal: si el rendimiento es suficiente o pasaron 2 temporadas en la misma categoría
-  if ((rendimientoPromedio >= 50 || state.temporada % 2 === 0) && idxActual < CATEGORIAS_ORDEN.length - 1) {
+  // Progresión no lineal según OVR y podios del campeonato
+  if ((ovr >= 52 || resumenAño.posicionFinal <= 3) && idxActual < CATEGORIAS_ORDEN.length - 1) {
     nuevaCategoria = CATEGORIAS_ORDEN[idxActual + 1];
   }
 
@@ -266,13 +344,15 @@ export function resolverFinDeTemporada(state: PlayerState): PlayerState {
     categoria: nuevaCategoria,
     temporada: state.temporada + 1,
     edad: nuevaEdad,
+    eventosUsadosTemporadaActual: [], // Reset estacional
+    historialCampeonatos: [...state.historialCampeonatos, resumenAño],
     finalizado,
     finalObtenido,
   };
 }
 
 /**
- * Aplica la opción elegida por el jugador y retorna el nuevo PlayerState.
+ * Aplica la opción elegida por el jugador y actualiza el estado.
  */
 export function aplicarOpcion(
   state: PlayerState,
@@ -290,7 +370,6 @@ export function aplicarOpcion(
   const consecuencias = opcion.consecuencias;
   const nuevasStats: PlayerStats = { ...state.stats };
 
-  // Aplicar deltas con clamp [0, 100]
   if (consecuencias.stats) {
     (Object.keys(consecuencias.stats) as StatKey[]).forEach((key) => {
       const delta = consecuencias.stats[key];
@@ -300,7 +379,6 @@ export function aplicarOpcion(
     });
   }
 
-  // Actualizar categoría y equipo si la opción lo indica
   let nuevaCategoria = state.categoria;
   if (consecuencias.avanzaCategoria) {
     nuevaCategoria = obtenerSiguienteCategoria(state.categoria);
@@ -320,6 +398,7 @@ export function aplicarOpcion(
     categoria: nuevaCategoria,
     equipo: nuevoEquipo,
     eventosVistos: [...state.eventosVistos, evento.id],
+    eventosUsadosTemporadaActual: [...state.eventosUsadosTemporadaActual, evento.id],
     juegoSucioCount: nuevoJuegoSucioCount,
     historial: [
       ...state.historial,
@@ -335,18 +414,13 @@ export function aplicarOpcion(
     ],
   };
 
-  // Cada 3 eventos jugados o si avanza categoría explícitamente, resolver avance de temporada/edad
   if (consecuencias.avanzaCategoria || estadoConHistorial.historial.length % 3 === 0) {
     estadoConHistorial = resolverFinDeTemporada(estadoConHistorial);
   }
 
-  // Evaluar finales
   return evaluarFinales(estadoConHistorial, finales);
 }
 
-/**
- * Comprueba si se cumplen condiciones de algún final.
- */
 export function evaluarFinales(state: PlayerState, finales: Final[]): PlayerState {
   for (const finalObj of finales) {
     if (finalObj.evaluar(state)) {

@@ -2,18 +2,18 @@ import { Final } from '../engine/types';
 
 export const FINALES: Final[] = [
   {
-    id: 'final-retiro-lesion',
-    titulo: 'Retiro Forzado por Lesión',
-    subtitulo: 'El cuerpo dijo basta antes que la pasión.',
-    descripcion: 'Los médicos no te dieron el alta para volver a subirte a un monoplaza. Tu carrera termina abruptamente en boxes.',
+    id: 'final-estancado-rendimiento-bajo',
+    titulo: 'Retiro por Rendimiento Insuficiente',
+    subtitulo: 'Sin la velocidad requerida para mantener el asiento.',
+    descripcion: 'Tras varias temporadas sin alcanzar los tiempos mínimos de clasificación, el equipo decidió no renovar tu plaza. Diste todo en la pista.',
     esExito: false,
-    evaluar: (state) => state.stats.consistencia <= 15,
+    evaluar: (state) => state.stats.velocidad <= 20 && state.stats.consistencia <= 20,
   },
   {
     id: 'final-quema-mental-abandono',
-    titulo: 'Abandono por Presión y Burnout',
-    subtitulo: 'Decidiste colgar el casco por tu propia salud mental.',
-    descripcion: 'La presión insoportable de la prensa, los patrocinadores y la competencia quebraron tu paz. Dejaste el automovilismo para recuperar tu vida.',
+    titulo: 'Retiro Voluntario por Paz Personal',
+    subtitulo: 'Decidiste colgar el casco por tu propia tranquilidad.',
+    descripcion: 'La presión insoportable de los medios y la competencia constante te llevaron a tomar la decisión consciente de retirarte del automovilismo.',
     esExito: false,
     evaluar: (state) => state.stats.popularidad <= 10 || state.stats.fama <= 10,
   },
@@ -37,7 +37,7 @@ export const FINALES: Final[] = [
     id: 'final-f1-campeon-sucio',
     titulo: 'Campeón Polémico e Implacable',
     subtitulo: 'Conseguiste la corona de F1, pero el paddock no olvida tus maniobras.',
-    descripcion: 'Lograste lo máximo: el título mundial de Fórmula 1. Pero en los libros de historia tu nombre quedará asociado a sobrepasos al límite, maniobras antideportivas y una ambición despiadada.',
+    descripcion: 'Lograste lo máximo: el título mundial de Fórmula 1. Pero en los libros de historia tu nombre quedará asociado a sobrepasos al límite y una ambición despiadada.',
     esExito: true,
     evaluar: (state) =>
       state.categoria === 'Fórmula 1' &&
@@ -61,7 +61,7 @@ export const FINALES: Final[] = [
     id: 'final-f1-subcampeon-agridulce',
     titulo: 'Subcampeón de F1 en Definición de Infarto',
     subtitulo: 'Perdiste el título por solo un punto en el último sector de la última vuelta.',
-    descripcion: 'Peleaste el campeonato mundial mano a mano hasta el último GP. Una falla técnica o una maniobra desesperada de tu rival te privó del título. Una carrera legendaria pero agridulce.',
+    descripcion: 'Peleaste el campeonato mundial mano a mano hasta el último GP. Una falla técnica o una maniobra desesperada de tu rival te privó del título.',
     esExito: true,
     evaluar: (state) =>
       state.categoria === 'Fórmula 1' &&
@@ -72,7 +72,7 @@ export const FINALES: Final[] = [
     id: 'final-f1-mitad-de-tabla',
     titulo: 'Piloto Consolidado de F1',
     subtitulo: 'Corriste años en la máxima categoría con orgullo y dignidad.',
-    descripcion: 'Llegaste a la Fórmula 1 y sumaste podios esporádicos en equipos de mitad de tabla. No fuiste campeón mundial, pero viviste el sueño que millones persiguen.',
+    descripcion: 'Llegaste a la Fórmula 1 y sumaste podios esporádicos en equipos de mitad de tabla. Viviste el sueño que millones persiguen.',
     esExito: true,
     evaluar: (state) => state.categoria === 'Fórmula 1' && state.temporada >= 7,
   },

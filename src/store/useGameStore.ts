@@ -20,13 +20,14 @@ interface GameStore {
     opcionTexto: string;
   } | null;
   opcionesEntrenamiento: OpcionEntrenamiento[];
-  pantallaActual: 'inicio' | 'entrenamiento' | 'juego' | 'resultado';
+  pantallaActual: 'inicio' | 'entrenamiento' | 'juego' | 'resumenTemporada' | 'resultado';
 
   // Acciones
   iniciarJuego: (nombrePiloto: string, nacionalidad: string, equipoKartingId: string, seed?: string) => void;
   elegirEntrenamiento: (habilidadKey: StatKey) => void;
   elegirOpcion: (opcionIndex: number) => void;
   continuarSiguienteEvento: () => void;
+  avanzarDesdeResumenTemporada: () => void;
   reiniciarJuego: () => void;
 }
 
@@ -83,7 +84,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       playerState: nuevoEstado,
       finalActual: finalObtenidoObj,
-      pantallaActual: finalObtenidoObj ? 'resultado' : 'juego',
       feedbackResultado: {
         textoResultado: opcion.consecuencias.textoResultado,
         statsDeltas: opcion.consecuencias.stats || {},
@@ -93,17 +93,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   continuarSiguienteEvento: () => {
-    const { playerState } = get();
+    const { playerState, finalActual } = get();
     if (!playerState) return;
 
-    if (playerState.finalizado) {
+    if (playerState.finalizado || finalActual) {
       set({ feedbackResultado: null, eventoActual: null, pantallaActual: 'resultado' });
+      return;
+    }
+
+    // Si terminó la temporada y hay historial de campeonato registrado, mostrar resumen de temporada
+    if (playerState.historialCampeonatos.length > 0 && playerState.historial.length % 3 === 0) {
+      set({
+        feedbackResultado: null,
+        pantallaActual: 'resumenTemporada',
+      });
       return;
     }
 
     const siguienteEvento = seleccionarEvento(EVENTOS, playerState);
 
-    // Si cambió de temporada o no hay más eventos en el pool actual, ofrecer entrenamiento
     if (!siguienteEvento) {
       const opcionesEnt = obtenerOpcionesEntrenamiento(playerState);
       set({
@@ -118,6 +126,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       eventoActual: siguienteEvento,
       feedbackResultado: null,
       pantallaActual: 'juego',
+    });
+  },
+
+  avanzarDesdeResumenTemporada: () => {
+    const { playerState } = get();
+    if (!playerState) return;
+
+    if (playerState.finalizado) {
+      set({ pantallaActual: 'resultado' });
+      return;
+    }
+
+    const opcionesEnt = obtenerOpcionesEntrenamiento(playerState);
+    set({
+      opcionesEntrenamiento: opcionesEnt,
+      pantallaActual: 'entrenamiento',
     });
   },
 

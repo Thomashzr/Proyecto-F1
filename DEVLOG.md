@@ -1,46 +1,51 @@
 # DEVLOG — Bitácora de Desarrollo de "El Campeón" (Simulador F1)
 
-## [2026-08-01] Implementación Completa de Prompt 3 — Nuevas Mecánicas de Juego
+## [2026-08-01] Plan de Migración e Implementación — Prompt 4 (ALPHA v0.4)
 
-### 1. Resumen de Decisiones de Arquitectura y Cambios Aplicados
-- **Bitácora Obligatoria (`DEVLOG.md`)**: Creado y mantenido como fuente única de verdad para decisiones de arquitectura y registro de estado.
-- **Respeto Estricto al Sistema de Diseño (Regla Dura)**: Se mantuvieron los tokens de color (`#0a0b0d`, `#e10600`, `#13151a`, `#f3f4f6`), tipografías (`Chakra Petch`, `JetBrains Mono`, `Outfit`) y firma visual F1.
-- **Nuevas Métricas (6 Habilidades + 2 Atributos Secundarios)**:
-  - Habilidades de pista: `velocidad`, `lluvia`, `ataque`, `defensa`, `gestion`, `consistencia`.
-  - Atributos fuera de pista: `fama`, `popularidad`.
-  - Re-mapeo completo de `src/engine/types.ts`, `src/data/eventos.ts` y `src/data/finales.ts`.
-- **Edad Inicial y Equipos Provinciales**:
-  - El piloto inicia a los **9 años**.
-  - Selección de nacionalidad (países del mundo) y selector de 24 equipos provinciales argentinos de karting en `src/data/equiposKarting.ts`.
-- **10 Categorías y Progresión No Lineal**:
-  - `Karting Regional` $\rightarrow$ `Karting Nacional` $\rightarrow$ `Fórmula Nacional` $\rightarrow$ `F4 Brasil` $\rightarrow$ `F4 España` $\rightarrow$ `F4 Italia` $\rightarrow$ `FRECA` $\rightarrow$ `FIA F3` $\rightarrow$ `FIA F2` $\rightarrow$ `Fórmula 1`.
-  - Función `resolverFinDeTemporada` con avance no lineal según rendimiento y permanencia.
-- **Fase de Entrenamiento Pre-Temporada**:
-  - Nueva pantalla `ScreenEntrenamiento.tsx` que ofrece 3 o 4 opciones de entrenamiento aleatorias de las 6 habilidades de pista antes de arrancar cada año.
+### 1. Resolución de Conflicto de Regla Dura: Eliminación de Retiro Obligatorio por Lesión
+- **Conflicto Detectado**: El Prompt 1.5 definió `final-retiro-lesion` como un Game Over impuesto. La sección 6 del Prompt 4 prohíbe explícitamente cualquier retiro forzado o derrota por lesión.
+- **Resolución**:
+  - Se elimina `final-retiro-lesion`.
+  - Se reemplaza por `final-estancado-rendimiento-bajo` (estancamiento prolongado por bajo nivel técnico sostenido) o retiro voluntario acordado.
+  - Se mantiene la cuenta de 8 finales narrativos sin game overs físicos injustos.
 
-### 2. Resultados de Simulación Masiva (1.000 Partidas)
-```text
-================ RESULTADOS DE SIMULACIÓN PROMPT 3 (1000 PARTIDAS) ================
-Partidas jugadas: 1000
-Partidas inconclusas (loops): 0 (0%)
-Promedio de eventos por partida: 20.01
-Promedio de temporadas por partida: 8.78
-
-Distribución de Finales:
-  - final-quema-mental-abandono: 359 (35.9%)
-  - final-f1-campeon-sucio: 331 (33.1%)
-  - final-f1-campeon-del-mundo: 190 (19.0%)
-  - final-f1-subcampeon-agridulce: 104 (10.4%)
-  - final-retiro-lesion: 16 (1.6%)
-===================================================================================
+#### Diff en `src/data/finales.ts`:
+```diff
+-  {
+-    id: 'final-retiro-lesion',
+-    titulo: 'Retiro Forzado por Lesión',
+-    subtitulo: 'El cuerpo dijo basta antes que la pasión.',
+-    descripcion: 'Los médicos no te dieron el alta para volver a subirte a un monoplaza.',
+-    esExito: false,
+-    evaluar: (state) => state.stats.consistencia <= 15,
+-  },
++  {
++    id: 'final-estancado-rendimiento-bajo',
++    titulo: 'Retiro por Rendimiento Insuficiente',
++    subtitulo: 'Sin la velocidad requerida para mantener el asiento.',
++    descripcion: 'Tras varias temporadas sin alcanzar los tiempos mínimos de clasificación, el equipo decidió no renovar tu plaza.',
++    esExito: false,
++    evaluar: (state) => state.stats.velocidad <= 20 && state.stats.consistencia <= 20,
++  },
 ```
 
 ---
 
+### 2. Nuevas Características de Arquitectura (ALPHA v0.4)
+- **OVR (Media General)**: Función pura `calcularMediaGeneral(stats)` (promedio de las 6 habilidades de pista).
+- **Control de Repetición Estacional**: Campo `eventosUsadosTemporadaActual: string[]` en `PlayerState` para evitar eventos repetidos dentro del mismo año.
+- **Simulación Anual de Campeonato**:
+  - Categorías Argentinas: 1 carrera clave + simulación del resto del calendario.
+  - Categorías Internacionales: 3 carreras clave + simulación determinista/ponderada con OVR.
+  - Módulo [src/data/calendarios.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/data/calendarios.ts).
+- **Tipificación de Eventos**: Campo `tipo: 'deportivo' | 'extradeportivo'` en `Evento`.
+- **Equipos Reales por Categoría**: Módulos en `/src/data/equipos/` (`equiposF1.ts`, `equiposF2.ts`, `equiposF3.ts`, `equiposFRECA.ts`, `equiposF4.ts`, `equiposFormulaNacional.ts`).
+- **Resumen de Temporada (`ScreenResumenTemporada.tsx`)**: Tabla completa de resultados de campeonato (fechas jugadas y simuladas) + ofertas de escuderías.
+- **Etiqueta de Versión**: Actualizada a **ALPHA v0.4**.
+
+---
+
 ## Estado Actual del Proyecto
-- **Versión**: 3.0.0 (Prompt 3 implementado y probado)
-- **Compilación / Pruebas**:
-  - `pnpm test` $\rightarrow$ 7 tests unitarios pasados (incluyendo la simulación masiva de 1.000 partidas).
-  - `pnpm typecheck` $\rightarrow$ 0 errores en TypeScript estricto.
-  - `pnpm build` $\rightarrow$ Build de producción generado en 2.44s.
-- **Próximos Pasos**: Esperar confirmación del usuario para fases opcionales de backend (Supabase) o exportaciones avanzadas.
+- **Versión**: ALPHA v0.4 (En proceso de migración de Prompt 4)
+- **Estado de Build/Tests**: 7 tests en suite previa.
+- **Próximos Pasos**: Crear `/src/data/equipos/`, actualizar `types.ts`, `gameEngine.ts`, `finales.ts`, `eventos.ts`, implementar simulación anual y componentes de la versión ALPHA.

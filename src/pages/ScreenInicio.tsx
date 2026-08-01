@@ -40,10 +40,12 @@ export const ScreenInicio: React.FC = () => {
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-f1red animate-pulse" />
           <span className="font-mono text-xs text-telemetria tracking-widest uppercase">
-            EL CAMPEÓN • SIMULADOR F1 2.0
+            EL CAMPEÓN • SIMULADOR F1
           </span>
         </div>
-        <span className="font-mono text-xs text-f1red font-bold">V 2.0</span>
+        <span className="font-mono text-xs text-f1red font-bold uppercase bg-f1red/10 border border-f1red/30 px-2 py-0.5 rounded">
+          VERSIÓN ALPHA v0.4
+        </span>
       </div>
 
       {/* Main Content Card */}

@@ -3,6 +3,7 @@ import { useGameStore } from './store/useGameStore';
 import { ScreenInicio } from './pages/ScreenInicio';
 import { ScreenEntrenamiento } from './pages/ScreenEntrenamiento';
 import { ScreenJuego } from './pages/ScreenJuego';
+import { ScreenResumenTemporada } from './pages/ScreenResumenTemporada';
 import { ScreenResultado } from './pages/ScreenResultado';
 
 export const App: React.FC = () => {
@@ -15,6 +16,8 @@ export const App: React.FC = () => {
       return <ScreenEntrenamiento />;
     case 'juego':
       return <ScreenJuego />;
+    case 'resumenTemporada':
+      return <ScreenResumenTemporada />;
     case 'resultado':
       return <ScreenResultado />;
     default:

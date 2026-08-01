@@ -2,10 +2,11 @@ import { Evento } from '../engine/types';
 
 export const EVENTOS: Evento[] = [
   // ==========================================
-  // KARTING REGIONAL Y KARTING NACIONAL (Edad 9-14)
+  // KARTING REGIONAL Y KARTING NACIONAL
   // ==========================================
   {
     id: 'karting-01-chasis-prestado',
+    tipo: 'deportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
     peso: 15,
@@ -30,6 +31,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'karting-02-primera-final-lluvia',
+    tipo: 'deportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
     peso: 15,
@@ -54,6 +56,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'karting-03-rivalidad-varela-1',
+    tipo: 'deportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
     peso: 20,
@@ -81,6 +84,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'karting-04-sacrificio-familiar',
+    tipo: 'extradeportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
     peso: 12,
@@ -105,6 +109,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'karting-05-salto-nacional',
+    tipo: 'extradeportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Regional',
     condiciones: [{ stat: 'velocidad', operador: '>=', valor: 48 }],
@@ -125,10 +130,11 @@ export const EVENTOS: Evento[] = [
   },
 
   // ==========================================
-  // FÓRMULA NACIONAL Y F4 BRASIL / ESPAÑA / ITALIA (Edad 14-18)
+  // FÓRMULA NACIONAL Y FÓRMULA 4
   // ==========================================
   {
     id: 'f4-01-primer-test-monoplaza',
+    tipo: 'deportivo',
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
     peso: 15,
@@ -153,11 +159,12 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f4-02-patrocinador-lacteo',
+    tipo: 'extradeportivo',
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
     peso: 15,
     titulo: 'Presión de la marca patrocinante',
-    descripcion: 'El patrocinador principal exige que te vistas con un traje ridículo en un spot publicitario antes de la carrera.',
+    descripcion: 'El patrocinador principal exige que te vistas con un traje llamativo en un spot publicitario antes de la carrera.',
     opciones: [
       {
         texto: 'Tragar saliva, hacer el spot y sonreír para las redes',
@@ -177,6 +184,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f4-03-choque-muro-curva-1',
+    tipo: 'deportivo',
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
     peso: 15,
@@ -201,6 +209,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f4-04-rivalidad-varela-2',
+    tipo: 'deportivo',
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
     peso: 18,
@@ -228,6 +237,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f4-05-orden-de-equipo',
+    tipo: 'extradeportivo',
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
     peso: 15,
@@ -252,6 +262,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f4-06-oferta-freca',
+    tipo: 'extradeportivo',
     categoriaMinima: 'Fórmula 4 Brasil',
     categoriaMaxima: 'Fórmula 4 Italia',
     condiciones: [{ stat: 'velocidad', operador: '>=', valor: 50 }],
@@ -273,10 +284,11 @@ export const EVENTOS: Evento[] = [
   },
 
   // ==========================================
-  // FRECA, FIA F3 Y FIA F2 (Edad 18-22)
+  // FRECA, FIA F3 Y FIA F2
   // ==========================================
   {
     id: 'f3-01-silverstone-lluvia',
+    tipo: 'deportivo',
     categoriaMinima: 'Formula Regional Europea',
     categoriaMaxima: 'FIA Fórmula 2',
     peso: 15,
@@ -301,6 +313,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f3-02-telemetria-compartida',
+    tipo: 'deportivo',
     categoriaMinima: 'Formula Regional Europea',
     categoriaMaxima: 'FIA Fórmula 2',
     peso: 15,
@@ -325,6 +338,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f3-03-trampa-aleron',
+    tipo: 'deportivo',
     categoriaMinima: 'Formula Regional Europea',
     categoriaMaxima: 'FIA Fórmula 2',
     peso: 15,
@@ -350,6 +364,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f3-04-superlicencia-f1',
+    tipo: 'extradeportivo',
     categoriaMinima: 'FIA Fórmula 2',
     categoriaMaxima: 'FIA Fórmula 2',
     condiciones: [{ stat: 'velocidad', operador: '>=', valor: 55 }],
@@ -371,10 +386,11 @@ export const EVENTOS: Evento[] = [
   },
 
   // ==========================================
-  // FÓRMULA 1 (Edad 22+)
+  // FÓRMULA 1
   // ==========================================
   {
     id: 'f1-01-debut-australia',
+    tipo: 'deportivo',
     categoriaMinima: 'Fórmula 1',
     categoriaMaxima: 'Fórmula 1',
     peso: 15,
@@ -400,6 +416,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f1-02-guerra-compañero-f1',
+    tipo: 'extradeportivo',
     categoriaMinima: 'Fórmula 1',
     categoriaMaxima: 'Fórmula 1',
     peso: 18,
@@ -424,6 +441,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f1-03-desarrollo-monoplaza',
+    tipo: 'deportivo',
     categoriaMinima: 'Fórmula 1',
     categoriaMaxima: 'Fórmula 1',
     peso: 15,
@@ -448,6 +466,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f1-04-pole-monaco',
+    tipo: 'deportivo',
     categoriaMinima: 'Fórmula 1',
     categoriaMaxima: 'Fórmula 1',
     peso: 15,
@@ -473,6 +492,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f1-05-decisión-etica-campeonato',
+    tipo: 'deportivo',
     categoriaMinima: 'Fórmula 1',
     categoriaMaxima: 'Fórmula 1',
     peso: 18,
@@ -498,6 +518,7 @@ export const EVENTOS: Evento[] = [
   },
   {
     id: 'f1-06-gran-final-interlagos',
+    tipo: 'deportivo',
     categoriaMinima: 'Fórmula 1',
     categoriaMaxima: 'Fórmula 1',
     condiciones: [{ stat: 'velocidad', operador: '>=', valor: 65 }],

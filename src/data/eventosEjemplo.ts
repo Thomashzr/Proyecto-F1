@@ -3,6 +3,7 @@ import { Evento } from '../engine/types';
 export const EVENTOS_EJEMPLO: Evento[] = [
   {
     id: 'karting_01_primera_carrera',
+    tipo: 'deportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Regional',
     peso: 10,

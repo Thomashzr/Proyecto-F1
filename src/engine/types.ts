@@ -24,17 +24,14 @@ export const CATEGORIAS_ORDEN: Categoria[] = [
 ];
 
 export interface PlayerStats {
-  // Habilidades principales (afectan rendimiento en pista)
-  velocidad: number;    // 0-100, velocidad en vuelta rápida y pole
-  lluvia: number;       // 0-100, destreza en suelo mojado
-  ataque: number;       // 0-100, sobrepasos y agresividad medida
-  defensa: number;      // 0-100, retención de posición y contención
-  gestion: number;      // 0-100, cuidado de neumáticos y combustible
-  consistencia: number; // 0-100, ritmo parejo sin errores
-
-  // Atributos secundarios (afectan oportunidades fuera de pista)
-  fama: number;         // 0-100, interés de espónsors y academias
-  popularidad: number;  // 0-100, cariño del público y afición
+  velocidad: number;    // 0-100
+  lluvia: number;       // 0-100
+  ataque: number;       // 0-100
+  defensa: number;      // 0-100
+  gestion: number;      // 0-100
+  consistencia: number; // 0-100
+  fama: number;         // 0-100
+  popularidad: number;  // 0-100
 }
 
 export type StatKey = keyof PlayerStats;
@@ -49,10 +46,37 @@ export interface HistorialEntry {
   temporada: number;
 }
 
+export interface ResultadoFecha {
+  numeroFecha: number;
+  nombreGranPremio: string;
+  circuito: string;
+  posicion: number;
+  pole: boolean;
+  vueltaRapida: boolean;
+  abandono: boolean;
+  esCarreraClave: boolean;
+  puntos: number;
+}
+
+export interface ResumenCampeonato {
+  temporada: number;
+  categoria: Categoria;
+  equipo: string;
+  posicionFinal: number;
+  puntosTotales: number;
+  victorias: number;
+  podios: number;
+  poles: number;
+  vueltasRapidas: number;
+  abandonos: number;
+  fechas: ResultadoFecha[];
+  ofertasSiguienteTemporada: string[];
+}
+
 export interface PlayerState {
   nombre: string;
   nacionalidad: string;
-  edad: number; // Arranca en 9 años
+  edad: number;
   temporada: number;
   categoria: Categoria;
   equipo: string | null;
@@ -62,9 +86,12 @@ export interface PlayerState {
   finalizado: boolean;
   finalObtenido: string | null;
   eventosVistos: string[];
+  eventosUsadosTemporadaActual: string[];
   seed: string;
   juegoSucioCount: number;
   entrenamientosRealizados: number;
+  historialCampeonatos: ResumenCampeonato[];
+  campeonatoActualFechas: ResultadoFecha[];
 }
 
 export interface Condicion {
@@ -89,6 +116,7 @@ export interface Opcion {
 
 export interface Evento {
   id: string;
+  tipo: 'deportivo' | 'extradeportivo';
   categoriaMinima?: Categoria;
   categoriaMaxima?: Categoria;
   condiciones?: Condicion[];

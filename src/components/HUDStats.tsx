@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlayerStats, Categoria } from '../engine/types';
+import { calcularMediaGeneral } from '../engine/gameEngine';
 
 interface HUDStatsProps {
   nombre: string;
@@ -20,6 +21,8 @@ export const HUDStats: React.FC<HUDStatsProps> = ({
   equipo,
   stats,
 }) => {
+  const ovr = calcularMediaGeneral(stats);
+
   const getCategoryBadgeColor = (cat: Categoria) => {
     if (cat.includes('Karting')) return 'bg-emerald-950 text-emerald-400 border-emerald-800';
     if (cat.includes('Fórmula 4') || cat.includes('Nacional'))
@@ -47,13 +50,16 @@ export const HUDStats: React.FC<HUDStatsProps> = ({
   return (
     <header className="w-full bg-asfalto-card border-b border-asfalto-border p-3 sm:p-4 sticky top-0 z-30 shadow-lg">
       <div className="max-w-4xl mx-auto flex flex-col gap-2.5">
-        {/* Superior: Nombre, Edad, Nacionalidad, Categoría y Temporada */}
+        {/* Superior: Nombre, Edad, OVR, Categoría y Temporada */}
         <div className="flex items-center justify-between gap-2 border-b border-asfalto-border/60 pb-2">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-f1red animate-pulse" />
             <h2 className="font-display text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
               {nombre}
             </h2>
+            <span className="bg-f1red-dark/80 text-white border border-f1red px-2 py-0.5 rounded font-mono text-xs font-bold">
+              OVR {ovr}
+            </span>
             <span className="text-xs font-mono text-telemetria hidden sm:inline">
               ({nacionalidad} • {edad} AÑOS • {equipo || 'Sin Escudería'})
             </span>
