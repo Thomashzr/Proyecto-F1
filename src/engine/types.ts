@@ -120,6 +120,7 @@ export interface PlayerState {
   historialCampeonatos: ResumenCampeonato[];
   campeonatoActualFechas: ResultadoFecha[];
   ofertasPendientes: OfertaEquipo[];
+  tagsHistorial: Record<string, number>;
 }
 
 export interface Condicion {
@@ -129,12 +130,14 @@ export interface Condicion {
 }
 
 export interface OpcionConsecuencia {
-  stats: Partial<Record<StatKey, number>>;
+  stats?: Partial<Record<StatKey, number>>;
   textoResultado: string;
   siguienteEventoId?: string;
   avanzaCategoria?: boolean;
   cambioEquipo?: string | null;
   incrementaJuegoSucio?: boolean;
+  tagHistorial?: string;
+  resultadosProbabilisticos?: Array<{ probabilidad: number; consecuencia: OpcionConsecuencia }>;
 }
 
 export interface Opcion {
@@ -145,6 +148,7 @@ export interface Opcion {
 export interface Evento {
   id: string;
   tipo: 'deportivo' | 'extradeportivo';
+  categoriaEvento?: 'deportivo' | 'equipo' | 'prensa' | 'mercado' | 'raro';
   categoriaMinima?: Categoria;
   categoriaMaxima?: Categoria;
   condiciones?: Condicion[];

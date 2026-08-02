@@ -11,6 +11,7 @@ import {
   ResultadoFecha,
   ResumenCampeonato,
   OfertaEquipo,
+  OpcionConsecuencia,
 } from './types';
 import { createRNG } from './rng';
 import { EQUIPOS_KARTING, EquipoKarting } from '../data/equiposKarting';
@@ -19,6 +20,7 @@ import { generarNombreRival } from '../data/nombresRivales';
 import { EQUIPOS_F1 } from '../data/equipos/equiposF1';
 import { EQUIPOS_F2 } from '../data/equipos/equiposF2';
 import { EQUIPOS_F3, EQUIPOS_FRECA, EQUIPOS_F4, EQUIPOS_FORMULA_NACIONAL } from '../data/equipos/equiposF3';
+import { evaluarArquetipoFinal } from '../data/arquetiposFinales';
 
 export function calcularMediaGeneral(stats: PlayerStats): number {
   const suma =
@@ -73,6 +75,12 @@ export function createInitialState(
     historialCampeonatos: [],
     campeonatoActualFechas: [],
     ofertasPendientes: [],
+    tagsHistorial: {
+      lealtadEquipo: 1,
+      ordenesAcatadas: 0,
+      ordenesIgnoradas: 0,
+      escandalosMediaticos: 0,
+    },
   };
 }
 
@@ -241,9 +249,6 @@ export function aplicarEntrenamiento(
   };
 }
 
-/**
- * Genera ofertas de escuderías incluyendo SIEMPRE la opción de continuidad (Bug 2, 5b, 7).
- */
 export function generarOfertasEscuderias(
   state: PlayerState,
   categoriaDestino: Categoria
@@ -274,6 +279,12 @@ export function generarOfertasEscuderias(
     }));
   }
 
+  // Filtrado por reputación / escándalos mediáticos (B.4)
+  const escandalos = state.tagsHistorial['escandalosMediaticos'] || 0;
+  if (escandalos >= 2) {
+    poolEquipos = poolEquipos.filter((e) => e.nivelRendimiento <= 88);
+  }
+
   const mezclados = [...poolEquipos].sort(() => getRandom() - 0.5);
   const seleccion = mezclados.slice(0, 3);
 
@@ -292,7 +303,6 @@ export function generarOfertasEscuderias(
     prestigioFamaBonus: Math.round(eq.nivelRendimiento / 10),
   }));
 
-  // Opción explícita de continuidad en el equipo actual (Bug 2 & 5b)
   const ofertaContinuidad: OfertaEquipo = {
     id: 'continuidad-equipo-actual',
     nombre: state.equipo || 'Escudería Actual',
@@ -450,12 +460,29 @@ export function aplicarOpcion(
     throw new Error(`La opción ${opcionIndex} no existe en el evento ${evento.id}`);
   }
 
-  const consecuencias = opcion.consecuencias;
+  let consecuencias: OpcionConsecuencia = opcion.consecuencias;
+
+  // Resolución de consecuencias probabilísticas (B.3)
+  if (consecuencias.resultadosProbabilisticos && consecuencias.resultadosProbabilisticos.length > 0) {
+    const rngSeed = `${state.seed}_prob_${state.historial.length}`;
+    const getRandom = createRNG(rngSeed);
+    const roll = getRandom();
+    let acumulado = 0;
+    for (const item of consecuencias.resultadosProbabilisticos) {
+      acumulado += item.probabilidad;
+      if (roll <= acumulado) {
+        consecuencias = item.consecuencia;
+        break;
+      }
+    }
+  }
+
   const nuevasStats: PlayerStats = { ...state.stats };
 
   if (consecuencias.stats) {
-    (Object.keys(consecuencias.stats) as StatKey[]).forEach((key) => {
-      const delta = consecuencias.stats[key];
+    const statsObj = consecuencias.stats;
+    (Object.keys(statsObj) as StatKey[]).forEach((key) => {
+      const delta = statsObj[key];
       if (typeof delta === 'number') {
         const deltaAjustado = Math.round(delta * 0.5);
         nuevasStats[key] = clamp(nuevasStats[key] + deltaAjustado, 0, 100);
@@ -476,6 +503,15 @@ export function aplicarOpcion(
   const nuevoJuegoSucioCount =
     state.juegoSucioCount + (consecuencias.incrementaJuegoSucio ? 1 : 0);
 
+  // Registro de consecuencias diferidas (B.4)
+  const nuevosTags = { ...state.tagsHistorial };
+  if (consecuencias.tagHistorial) {
+    nuevosTags[consecuencias.tagHistorial] = (nuevosTags[consecuencias.tagHistorial] || 0) + 1;
+  }
+  if (consecuencias.cambioEquipo === state.equipo) {
+    nuevosTags['lealtadEquipo'] = (nuevosTags['lealtadEquipo'] || 0) + 1;
+  }
+
   const textoResultadoConRival = consecuencias.textoResultado.replace(
     /Nico Varela|{RIVAL}/g,
     state.rivalNombre
@@ -486,6 +522,7 @@ export function aplicarOpcion(
     stats: nuevasStats,
     categoria: nuevaCategoria,
     equipo: nuevoEquipo,
+    tagsHistorial: nuevosTags,
     eventosVistos: [...state.eventosVistos, evento.id],
     eventosUsadosTemporadaActual: [...state.eventosUsadosTemporadaActual, evento.id],
     juegoSucioCount: nuevoJuegoSucioCount,
@@ -511,12 +548,21 @@ export function aplicarOpcion(
 }
 
 export function evaluarFinales(state: PlayerState, finales: Final[]): PlayerState {
+  if (state.finalizado) {
+    const resArquetipo = evaluarArquetipoFinal(state);
+    return {
+      ...state,
+      finalObtenido: resArquetipo.id,
+    };
+  }
+
   for (const finalObj of finales) {
     if (finalObj.evaluar(state)) {
+      const resArquetipo = evaluarArquetipoFinal(state);
       return {
         ...state,
         finalizado: true,
-        finalObtenido: finalObj.id,
+        finalObtenido: resArquetipo.id,
       };
     }
   }

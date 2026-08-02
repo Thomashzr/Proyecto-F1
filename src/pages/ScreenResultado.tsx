@@ -2,13 +2,16 @@ import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { toPng } from 'html-to-image';
 import { useGameStore } from '../store/useGameStore';
+import { evaluarArquetipoFinal } from '../data/arquetiposFinales';
 
 export const ScreenResultado: React.FC = () => {
-  const { playerState, finalActual, reiniciarJuego } = useGameStore();
+  const { playerState, reiniciarJuego } = useGameStore();
   const cardRef = useRef<HTMLDivElement>(null);
   const [generandoImagen, setGenerandoImagen] = useState(false);
 
-  if (!playerState || !finalActual) return null;
+  if (!playerState) return null;
+
+  const resultadoDinámico = evaluarArquetipoFinal(playerState);
 
   const handleDescargarTarjeta = async () => {
     if (!cardRef.current) return;
@@ -27,7 +30,7 @@ export const ScreenResultado: React.FC = () => {
   };
 
   const handleCompartirTexto = () => {
-    const texto = `🏎️ Mi carrera en "El Campeón (Simulador F1)":\nPiloto: ${playerState.nombre} (${playerState.nacionalidad})\nFinal: ${finalActual.titulo}\nCategoría: ${playerState.categoria} (${playerState.temporada} temporadas)\nVelocidad: ${playerState.stats.velocidad} | Fama: ${playerState.stats.fama}\nSemilla: ${playerState.seed}`;
+    const texto = `🏎️ Mi carrera en "El Campeón (Simulador F1)":\nPiloto: ${playerState.nombre} (${playerState.nacionalidad})\nConclusión: ${resultadoDinámico.titulo}\nCategoría Final: ${playerState.categoria} (${playerState.temporada} temporadas • ${playerState.edad} años)\nSemilla: ${playerState.seed}`;
     if (navigator.share) {
       navigator.share({ title: 'El Campeón F1', text: texto }).catch(() => {});
     } else {
@@ -44,7 +47,7 @@ export const ScreenResultado: React.FC = () => {
         transition={{ duration: 0.35 }}
         className="w-full max-w-xl flex flex-col gap-6"
       >
-        {/* TARJETA DE RESULTADO COMPARTIBLE (Ref para html-to-image) */}
+        {/* TARJETA DE RESULTADO DINÁMICA COMPARTIBLE */}
         <div
           ref={cardRef}
           className="bg-asfalto-card border-2 border-asfalto-border rounded-xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden"
@@ -52,47 +55,47 @@ export const ScreenResultado: React.FC = () => {
           {/* Listón lateral de estatus */}
           <div
             className={`absolute top-0 left-0 right-0 h-2 ${
-              finalActual.esExito ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-f1red'
+              resultadoDinámico.esExito ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-f1red'
             }`}
           />
 
           <div className="flex items-center justify-between border-b border-asfalto-border pb-4">
             <div>
               <span className="font-mono text-xs text-telemetria uppercase tracking-widest block">
-                FICHA DE RESULTADO DE CARRERA
+                FICHA HISTÓRICA DE CARRERA
               </span>
               <h2 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white tracking-wide">
                 {playerState.nombre}
               </h2>
               <span className="text-xs font-mono text-telemetria">
-                {playerState.nacionalidad} • {playerState.edad} AÑOS
+                {playerState.nacionalidad} • {playerState.edad} AÑOS DE EDAD
               </span>
             </div>
             <span
               className={`font-mono text-xs px-3 py-1 rounded border uppercase font-bold ${
-                finalActual.esExito
+                resultadoDinámico.esExito
                   ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
                   : 'bg-red-950 text-red-400 border-red-800'
               }`}
             >
-              {finalActual.esExito ? 'ÉXITO MUNDIAL' : 'RETIRADO / FICHA CERRADA'}
+              {resultadoDinámico.esExito ? 'CARRERA EXITOSA' : 'FICHA CERRADA'}
             </span>
           </div>
 
-          {/* Bloque del Final */}
+          {/* Bloque del Resultado Dinámico Interpolado (B.5) */}
           <div className="bg-asfalto/80 border border-asfalto-border p-4 rounded-lg space-y-2">
             <span className="font-mono text-xs text-f1red font-bold uppercase tracking-wider block">
-              {finalActual.subtitulo}
+              {resultadoDinámico.subtitulo}
             </span>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-white uppercase leading-none">
-              {finalActual.titulo}
+              {resultadoDinámico.titulo}
             </h1>
             <p className="text-telemetria-light text-xs sm:text-sm leading-relaxed font-sans pt-1">
-              {finalActual.descripcion}
+              {resultadoDinámico.descripcion}
             </p>
           </div>
 
-          {/* Habilidades Finales */}
+          {/* Estadísticas de Pista */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono">
             <div className="bg-asfalto border border-asfalto-border p-2.5 rounded">
               <span className="text-[10px] text-telemetria block">CATEGORÍA</span>
@@ -115,9 +118,9 @@ export const ScreenResultado: React.FC = () => {
           {/* Resumen del Historial */}
           <div className="space-y-2">
             <span className="font-mono text-xs text-telemetria uppercase tracking-widest block font-semibold">
-              LOGS CLAVE DE LA CARRERA ({playerState.historial.length} Hitos):
+              HITOS CLAVE ({playerState.historial.length} Eventos • {playerState.temporada} Temporadas):
             </span>
-            <div className="bg-asfalto border border-asfalto-border rounded p-3 max-h-40 overflow-y-auto text-xs space-y-2 font-sans">
+            <div className="bg-asfalto border border-asfalto-border rounded p-3 max-h-36 overflow-y-auto text-xs space-y-2 font-sans">
               {playerState.historial.map((item, idx) => (
                 <div key={idx} className="border-b border-asfalto-border/60 pb-1.5 last:border-0">
                   <span className="font-mono text-f1red font-bold">
@@ -132,7 +135,7 @@ export const ScreenResultado: React.FC = () => {
 
           <div className="flex items-center justify-between text-[10px] font-mono text-telemetria-muted border-t border-asfalto-border pt-3">
             <span>SEMILLA DE PARTIDA: {playerState.seed}</span>
-            <span>EL CAMPEÓN F1</span>
+            <span>EL CAMPEÓN F1 • ALPHA v0.6.0</span>
           </div>
         </div>
 

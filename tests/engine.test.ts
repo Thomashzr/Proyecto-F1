@@ -5,6 +5,7 @@ import {
   calcularMediaGeneral,
 } from '../src/engine/gameEngine';
 import { createRNG } from '../src/engine/rng';
+import { evaluarArquetipoFinal } from '../src/data/arquetiposFinales';
 import { Evento } from '../src/engine/types';
 
 describe('RNG & Seed System', () => {
@@ -22,7 +23,7 @@ describe('RNG & Seed System', () => {
   });
 });
 
-describe('Motor de Juego - OVR y Utilidades ALPHA v0.4', () => {
+describe('Motor de Juego - OVR y Utilidades ALPHA v0.6.0', () => {
   it('calcula la Media General (OVR) como promedio redondeado de las 6 habilidades de pista', () => {
     const stats = {
       velocidad: 60,
@@ -37,7 +38,7 @@ describe('Motor de Juego - OVR y Utilidades ALPHA v0.4', () => {
     expect(calcularMediaGeneral(stats)).toBe(55);
   });
 
-  it('inicializa un nuevo jugador con valores ALPHA v0.4', () => {
+  it('inicializa un nuevo jugador con valores ALPHA v0.6.0', () => {
     const estado = createInitialState('Franco Colapinto', 'Argentina', 'buenos-aires-racing', 'seed123');
     expect(estado.nombre).toBe('Franco Colapinto');
     expect(estado.nacionalidad).toBe('Argentina');
@@ -45,6 +46,22 @@ describe('Motor de Juego - OVR y Utilidades ALPHA v0.4', () => {
     expect(estado.categoria).toBe('Karting Regional');
     expect(estado.seed).toBe('seed123');
     expect(estado.finalizado).toBe(false);
+    expect(estado.tagsHistorial).toBeDefined();
+  });
+});
+
+describe('Arquetipos de Finales Dinámicos', () => {
+  it('evalúa dinámicamente un arquetipo final e interpola el nombre del piloto y equipo', () => {
+    const state = createInitialState('Franco Colapinto', 'Argentina', 'buenos-aires-racing', 'seed_test');
+    state.categoria = 'Fórmula 1';
+    state.equipo = 'Oracle Red Bull Racing';
+    state.stats.velocidad = 85;
+    state.stats.consistencia = 80;
+
+    const res = evaluarArquetipoFinal(state);
+    expect(res.titulo).toBeDefined();
+    expect(res.descripcion).toContain('Franco Colapinto');
+    expect(res.esExito).toBe(true);
   });
 });
 
