@@ -30,9 +30,9 @@ export const ScreenResultado: React.FC = () => {
   };
 
   const handleCompartirTexto = () => {
-    const texto = `🏎️ Mi carrera en "El Campeón (Simulador F1)":\nPiloto: ${playerState.nombre} (${playerState.nacionalidad})\nConclusión: ${resultadoDinámico.titulo}\nCategoría Final: ${playerState.categoria} (${playerState.temporada} temporadas • ${playerState.edad} años)\nSemilla: ${playerState.seed}`;
+    const texto = `🏎️ Mi carrera en "Pistero (Simulador F1)":\nPiloto: ${playerState.nombre} (${playerState.nacionalidad})\nConclusión: ${resultadoDinámico.titulo}\nCategoría Final: ${playerState.categoria} (${playerState.temporada} temporadas • ${playerState.edad} años)`;
     if (navigator.share) {
-      navigator.share({ title: 'El Campeón F1', text: texto }).catch(() => {});
+      navigator.share({ title: 'Pistero F1', text: texto }).catch(() => {});
     } else {
       navigator.clipboard.writeText(texto);
       alert('¡Resultado copiado al portapapeles!');
@@ -133,9 +133,8 @@ export const ScreenResultado: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-[10px] font-mono text-telemetria-muted border-t border-asfalto-border pt-3">
-            <span>SEMILLA DE PARTIDA: {playerState.seed}</span>
-            <span>EL CAMPEÓN F1 • ALPHA v0.6.0</span>
+          <div className="flex items-center justify-center text-[10px] font-mono text-telemetria-muted border-t border-asfalto-border pt-3">
+            <span>PISTERO F1 • ALPHA v0.7.0</span>
           </div>
         </div>
 

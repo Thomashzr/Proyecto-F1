@@ -56,7 +56,7 @@ export const ScreenJuego: React.FC = () => {
                 onClick={continuarSiguienteEvento}
                 className="mt-4 px-6 py-2.5 bg-f1red text-white font-display uppercase font-bold rounded"
               >
-                IR A PRE-TEMPORADA ➔
+                VER RESUMEN DE TEMPORADA ➔
               </button>
             </div>
           )}
@@ -65,7 +65,7 @@ export const ScreenJuego: React.FC = () => {
 
       {/* Footer F1 Signature */}
       <footer className="w-full bg-asfalto-card border-t border-asfalto-border p-3 text-center font-mono text-xs text-telemetria-muted">
-        SEMILLA: {playerState.seed} • {playerState.historial.length} EVENTOS COMPLETADOS
+        {playerState.historial.length} EVENTOS COMPLETADOS
       </footer>
     </div>
   );

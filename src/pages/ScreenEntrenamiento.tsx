@@ -18,7 +18,7 @@ export const ScreenEntrenamiento: React.FC = () => {
       >
         <div className="border-b border-asfalto-border pb-4">
           <span className="font-mono text-xs text-telemetria uppercase tracking-widest block font-semibold">
-            PRE-TEMPORADA {playerState.temporada} • {playerState.categoria.toUpperCase()} ({playerState.edad} AÑOS)
+            INICIO DE TEMPORADA {playerState.temporada} • {playerState.categoria.toUpperCase()} ({playerState.edad} AÑOS)
           </span>
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white tracking-wide mt-1">
             ENTRENAMIENTO INICIAL

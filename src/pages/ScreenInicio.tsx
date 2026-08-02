@@ -10,7 +10,6 @@ export const ScreenInicio: React.FC = () => {
   const [nombre, setNombre] = useState('');
   const [nacionalidad, setNacionalidad] = useState('Argentina');
   const [equipoKartingId, setEquipoKartingId] = useState(EQUIPOS_KARTING[0].id);
-  const [seedCustom, setSeedCustom] = useState('');
   const [busquedaPais, setBusquedaPais] = useState('');
 
   const paisesFiltrados = useMemo(() => {
@@ -23,7 +22,7 @@ export const ScreenInicio: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombre.trim()) return;
-    iniciarJuego(nombre.trim(), nacionalidad, equipoKartingId, seedCustom.trim() || undefined);
+    iniciarJuego(nombre.trim(), nacionalidad, equipoKartingId);
   };
 
   return (
@@ -33,11 +32,11 @@ export const ScreenInicio: React.FC = () => {
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-f1red animate-pulse" />
           <span className="font-mono text-xs text-telemetria tracking-widest uppercase">
-            EL CAMPEÓN • SIMULADOR F1
+            PISTERO • SIMULADOR F1
           </span>
         </div>
         <span className="font-mono text-xs text-f1red font-bold uppercase bg-f1red/10 border border-f1red/30 px-2 py-0.5 rounded">
-          VERSIÓN ALPHA v0.6.0
+          VERSIÓN ALPHA v0.7.0
         </span>
       </div>
 
@@ -127,21 +126,6 @@ export const ScreenInicio: React.FC = () => {
             </select>
           </div>
 
-          {/* Seed Opcional */}
-          <div className="space-y-2">
-            <label htmlFor="seed-custom" className="font-mono text-xs text-telemetria uppercase tracking-wider block">
-              SEMILLA ALEATORIA / SEED (OPCIONAL):
-            </label>
-            <input
-              id="seed-custom"
-              type="text"
-              placeholder="Ej: f1_campeon_2026 (vacío para aleatoria)"
-              value={seedCustom}
-              onChange={(e) => setSeedCustom(e.target.value)}
-              className="w-full bg-asfalto border border-asfalto-border focus:border-f1red text-telemetria text-xs font-mono p-2.5 rounded focus:outline-none transition-colors"
-            />
-          </div>
-
           {/* Submit Button */}
           <button
             type="submit"
@@ -155,7 +139,7 @@ export const ScreenInicio: React.FC = () => {
 
       {/* Footer */}
       <div className="w-full max-w-2xl text-center font-mono text-[10px] text-telemetria-muted">
-        EL CAMPEÓN SIMULADOR F1 • ALPHA v0.6.0
+        PISTERO SIMULADOR F1 • ALPHA v0.7.0
       </div>
     </div>
   );

@@ -422,4 +422,258 @@ export const EVENTOS: Evento[] = [
       },
     ],
   },
+
+  // Nuevos eventos agregados para mayor variedad y balance (Prompt 8)
+  {
+    id: 'karting-07-ajuste-carburacion-calor',
+    tipo: 'deportivo',
+    categoriaMinima: 'Karting Regional',
+    categoriaMaxima: 'Karting Nacional',
+    peso: 20,
+    titulo: 'Calor sofocante sobre el asfalto',
+    descripcion: 'La temperatura en pista supera los 42°C. El motor de 2 tiempos empieza a ahogarse por falta de densidad de aire.',
+    opciones: [
+      {
+        texto: 'Abrir la aguja de alta y bajar compresión sacrificando recta',
+        consecuencias: {
+          stats: { gestion: 5, consistencia: 4 },
+          textoResultado: 'El motor no se detuvo y lográs terminar con ritmo sólido a pesar del calor agobiante.',
+        },
+      },
+      {
+        texto: 'Mantener la carburación fina al límite corriendo el riesgo de agarrar pistón',
+        consecuencias: {
+          stats: { velocidad: 6, consistencia: -4 },
+          textoResultado: 'Ganas décimas clave por vuelta, rozando el límite de temperatura de agua.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'karting-08-chasis-doblado',
+    tipo: 'deportivo',
+    categoriaMinima: 'Karting Regional',
+    categoriaMaxima: 'Karting Nacional',
+    peso: 18,
+    titulo: 'Golpe en las tandas libres y chasis torcido',
+    descripcion: 'Un toque en los entrenamientos dejó el pontón y la punta de eje desalineada.',
+    opciones: [
+      {
+        texto: 'Enderezar el chasis a palanca con el mecánico en los boxes',
+        consecuencias: {
+          stats: { defensa: 4, consistencia: 3 },
+          textoResultado: 'Acomodaron la masa y saliste a pista resistiendo con el auto equilibrado.',
+        },
+      },
+      {
+        texto: 'Gastar los ahorros en reemplazar el soporte de eje completo',
+        consecuencias: {
+          stats: { velocidad: 5, gestion: -3 },
+          textoResultado: 'El karting quedó impecable, aunque afectó el presupuesto de la fecha.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f4-05-viento-cruzado',
+    tipo: 'deportivo',
+    categoriaMinima: 'Fórmula Nacional',
+    categoriaMaxima: 'Fórmula 4 Italia',
+    peso: 20,
+    titulo: 'Ráfagas de viento cruzado en la recta principal',
+    descripcion: 'Fuertes vientos en el circuito desestabilizan el alerón delantero a más de 200 km/h.',
+    opciones: [
+      {
+        texto: 'Cargar 2 grados más de ala delantera para ganar estabilidad',
+        consecuencias: {
+          stats: { defensa: 5, gestion: 4 },
+          textoResultado: 'Perdiste un poco de velocidad final, pero ganaste seguridad en curvas rápidas.',
+        },
+      },
+      {
+        texto: 'Mantener la configuración descargada y corregir con el volante',
+        consecuencias: {
+          stats: { ataque: 6, consistencia: -3 },
+          textoResultado: 'Brillante trabajo de brazos en la recta superando a dos monoplazas.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f4-07-eleccion-compuesto',
+    tipo: 'deportivo',
+    categoriaMinima: 'Fórmula 4 Brasil',
+    categoriaMaxima: 'Formula Regional Europea',
+    peso: 20,
+    titulo: 'Dilema de compuesto para la tanda decisiva',
+    descripcion: 'El asfalto está frío y abrasivo. Tenés que elegir la estrategia de neumáticos con el equipo.',
+    opciones: [
+      {
+        texto: 'Optar por neumáticos blandos para atacar en las primeras 5 vueltas',
+        consecuencias: {
+          stats: { velocidad: 6, ataque: 5, gestion: -4 },
+          textoResultado: 'Tomaste la punta temprano pero los neumáticos terminaron al límite de desgaste.',
+        },
+      },
+      {
+        texto: 'Elegir el compuesto medio apostando al ritmo de fin de carrera',
+        consecuencias: {
+          stats: { gestion: 6, consistencia: 5 },
+          textoResultado: 'Cuidaste el compuesto y superaste rivales en las últimas vueltas.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f3-03-pole-monaco',
+    tipo: 'deportivo',
+    categoriaMinima: 'Formula Regional Europea',
+    categoriaMaxima: 'FIA Fórmula 3',
+    peso: 20,
+    titulo: 'Clasificación entre los muros de Mónaco',
+    descripcion: 'Tenés una sola vuelta limpia para meter el auto en la primera fila rozando los guardarraíles de la Piscina.',
+    opciones: [
+      {
+        texto: 'Rozar los muros al milímetro arriesgando la suspensión',
+        consecuencias: {
+          stats: { velocidad: 8, ataque: 6, fama: 8 },
+          textoResultado: '¡Vuelta impresionante! Metés el monoplaza en la primera línea con aplausos del paddock.',
+        },
+      },
+      {
+        texto: 'Asegurar una trazada limpia sin arriesgar el auto en la chicana',
+        consecuencias: {
+          stats: { consistencia: 6, gestion: 5 },
+          textoResultado: 'Clasificás en el lote puntero garantizando salir sin daños.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f3-04-estrategia-undercut',
+    tipo: 'deportivo',
+    categoriaMinima: 'FIA Fórmula 3',
+    categoriaMaxima: 'FIA Fórmula 2',
+    peso: 20,
+    titulo: 'Oportunidad de Undercut en boxes',
+    descripcion: 'Quedaste atrapado en el aire sucio detrás de tu rival. Tu ingeniero propone parar una vuelta antes.',
+    opciones: [
+      {
+        texto: 'Anticipar la parada en boxes marcando 3 sectores en récord',
+        consecuencias: {
+          stats: { ataque: 7, velocidad: 6 },
+          textoResultado: '¡Undercut perfecto! Salís por delante cuando tu rival sale de los pits.',
+        },
+      },
+      {
+        texto: 'Estirar la tanda 4 vueltas más para tener neumáticos más frescos al final',
+        consecuencias: {
+          stats: { gestion: 7, consistencia: 5 },
+          textoResultado: 'Tu ritmo al final de carrera te permitió superar a dos autos sobre la meta.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f2-01-degradacion-bahrein',
+    tipo: 'deportivo',
+    categoriaMinima: 'FIA Fórmula 2',
+    categoriaMaxima: 'FIA Fórmula 2',
+    peso: 22,
+    titulo: 'Abrasión extrema de asfalto en Sakhir',
+    descripcion: 'El neumático trasero izquierdo muestra ampolla de degradación térmica a falta de 4 vueltas.',
+    opciones: [
+      {
+        texto: 'Modificar el reparto de frenada hacia adelante y cuidar la tracción',
+        consecuencias: {
+          stats: { gestion: 8, defensa: 5 },
+          textoResultado: 'Salvaste la goma y aguantaste la posición con astucia estratégica.',
+        },
+      },
+      {
+        texto: 'Defender la posición atacando cada vértice sin aflojar',
+        consecuencias: {
+          stats: { ataque: 6, consistencia: -6 },
+          textoResultado: 'Sufriste un derrape en la última curva pero mantuviste el puesto.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f1-03-radio-ordenes-equipo',
+    tipo: 'deportivo',
+    categoriaMinima: 'Fórmula 1',
+    categoriaMaxima: 'Fórmula 1',
+    peso: 25,
+    titulo: 'Órdenes de equipo por radio: "Let him pass"',
+    descripcion: 'Tu ingeniero te comunica por radio que dejes pasar a tu compañero de equipo por estrategia de campeonato.',
+    opciones: [
+      {
+        texto: 'Acatar la orden y ceder la posición de forma profesional',
+        consecuencias: {
+          stats: { consistencia: 6, popularidad: 5 },
+          tagHistorial: 'ordenesAcatadas',
+          textoResultado: 'Cediste el paso de forma impecable. El director de equipo valora tu lealtad institucional.',
+        },
+      },
+      {
+        texto: 'Ignorar la radio y defender el puesto hasta la bandera a cuadros',
+        consecuencias: {
+          stats: { velocidad: 8, popularidad: -6 },
+          tagHistorial: 'ordenesIgnoradas',
+          textoResultado: 'Cruzaste por delante de tu compañero. Polémica ardiente en las entrevistas post-carrera.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f1-04-mejora-suelo',
+    tipo: 'deportivo',
+    categoriaMinima: 'Fórmula 1',
+    categoriaMaxima: 'Fórmula 1',
+    peso: 22,
+    titulo: 'Nuevo paquete aerodinámico de piso',
+    descripcion: 'El equipo trae un suelo rediseñado en carbono que promete 2 décimas por vuelta.',
+    opciones: [
+      {
+        texto: 'Exigir la puesta a punto agresiva de altura al suelo',
+        consecuencias: {
+          stats: { velocidad: 9, consistencia: -3 },
+          textoResultado: 'El monoplaza vuela en clasificación aunque roza con violencia sobre las rectas.',
+        },
+      },
+      {
+        texto: 'Configurar una altura conservadora para evitar desgaste de la plancha inferior',
+        consecuencias: {
+          stats: { gestion: 7, consistencia: 6 },
+          textoResultado: 'Asegurás un auto estable y sin riesgos de descalificación técnica.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f1-05-rueda-prensa-polemica',
+    tipo: 'extradeportivo',
+    categoriaMinima: 'Fórmula 1',
+    categoriaMaxima: 'Fórmula 1',
+    peso: 20,
+    titulo: 'Conferencia de prensa acalorada',
+    descripcion: 'Periodistas internacionales cuestionan tu estilo de defensa agresivo contra {RIVAL}.',
+    opciones: [
+      {
+        texto: 'Defender tu estilo: "Esto es Fórmula 1, no un paseo de domingo"',
+        consecuencias: {
+          stats: { fama: 10, popularidad: 8 },
+          textoResultado: 'Tu declaración se volvió tendencia global. Los fanáticos adoran tu carácter picante.',
+        },
+      },
+      {
+        texto: 'Responder con diplomacia y elogiar la competitividad del campeonato',
+        consecuencias: {
+          stats: { popularidad: 5, gestion: 4 },
+          textoResultado: 'Proyectaste una imagen madura y profesional altamente valorada por los patrocinadores.',
+        },
+      },
+    ],
+  },
 ];

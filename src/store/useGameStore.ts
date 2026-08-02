@@ -7,6 +7,8 @@ import {
   obtenerOpcionesEntrenamiento,
   aplicarEntrenamiento,
   evaluarFinales,
+  interpolarTexto,
+  cantidadCarrerasClave,
 } from '../engine/gameEngine';
 import { EVENTOS } from '../data/eventos';
 import { FINALES } from '../data/finales';
@@ -22,6 +24,7 @@ interface GameStore {
   } | null;
   opcionesEntrenamiento: OpcionEntrenamiento[];
   pantallaActual: 'inicio' | 'entrenamiento' | 'juego' | 'ofertasEquipos' | 'resumenTemporada' | 'resultado';
+  temporadaResumenMostrada: number;
 
   // Acciones
   iniciarJuego: (nombrePiloto: string, nacionalidad: string, equipoKartingId: string, seed?: string) => void;
@@ -41,6 +44,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   feedbackResultado: null,
   opcionesEntrenamiento: [],
   pantallaActual: 'inicio',
+  temporadaResumenMostrada: 0,
 
   iniciarJuego: (nombrePiloto: string, nacionalidad: string, equipoKartingId: string, seed?: string) => {
     const initialState = createInitialState(nombrePiloto, nacionalidad, equipoKartingId, seed);
@@ -50,6 +54,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playerState: initialState,
       opcionesEntrenamiento: opcionesEnt,
       pantallaActual: 'entrenamiento',
+      temporadaResumenMostrada: 0,
       eventoActual: null,
       finalActual: null,
       feedbackResultado: null,
@@ -118,15 +123,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       finalActual: finalObtenidoObj,
       pantallaActual: finalObtenidoObj ? 'resultado' : 'juego',
       feedbackResultado: {
-        textoResultado: opcion.consecuencias.textoResultado,
+        textoResultado: interpolarTexto(opcion.consecuencias.textoResultado, playerState),
         statsDeltas: opcion.consecuencias.stats || {},
-        opcionTexto: opcion.texto,
+        opcionTexto: interpolarTexto(opcion.texto, playerState),
       },
     });
   },
 
   continuarSiguienteEvento: () => {
-    const { playerState, finalActual } = get();
+    const { playerState, finalActual, temporadaResumenMostrada } = get();
     if (!playerState) return;
 
     if (playerState.finalizado || finalActual) {
@@ -134,8 +139,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    // Bug 1 Fix: Mostrar resumen de temporada SIEMPRE que concluya una temporada (incluida la Temporada 1)
-    if (playerState.historial.length % 3 === 0) {
+    const ultimoCampeonato = playerState.historialCampeonatos[playerState.historialCampeonatos.length - 1];
+    if (ultimoCampeonato && ultimoCampeonato.temporada > temporadaResumenMostrada) {
+      set({
+        temporadaResumenMostrada: ultimoCampeonato.temporada,
+        feedbackResultado: null,
+        pantallaActual: 'resumenTemporada',
+      });
+      return;
+    }
+
+    const maxEventos = cantidadCarrerasClave(playerState.categoria);
+    if (playerState.eventosUsadosTemporadaActual.length >= maxEventos) {
       set({
         feedbackResultado: null,
         pantallaActual: 'resumenTemporada',
@@ -146,11 +161,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const siguienteEvento = seleccionarEvento(EVENTOS, playerState);
 
     if (!siguienteEvento) {
-      const opcionesEnt = obtenerOpcionesEntrenamiento(playerState);
       set({
-        opcionesEntrenamiento: opcionesEnt,
-        pantallaActual: 'entrenamiento',
         feedbackResultado: null,
+        pantallaActual: 'resumenTemporada',
       });
       return;
     }
@@ -210,6 +223,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       feedbackResultado: null,
       opcionesEntrenamiento: [],
       pantallaActual: 'inicio',
+      temporadaResumenMostrada: 0,
     });
   },
 }));

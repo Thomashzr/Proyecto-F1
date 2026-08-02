@@ -106,7 +106,38 @@ export function evaluarCondicion(stats: PlayerStats, condicion: Condicion): bool
   }
 }
 
-export function esEventoElegible(evento: Evento, state: PlayerState): boolean {
+export function cantidadCarrerasClave(categoria: Categoria): number {
+  if (
+    categoria === 'Karting Regional' ||
+    categoria === 'Karting Nacional' ||
+    categoria === 'Fórmula Nacional'
+  ) {
+    return 1;
+  }
+  return 3;
+}
+
+export function haOcurridoEnUltimasTemporadas(
+  evento: Evento,
+  state: PlayerState,
+  cooldownTemporadas: number = 2
+): boolean {
+  if (evento.personajeRecurrente) {
+    return false;
+  }
+
+  const apariciones = state.historial.filter((h) => h.eventoId === evento.id);
+  if (apariciones.length === 0) return false;
+
+  const ultimaTemporadaAparicion = Math.max(...apariciones.map((h) => h.temporada));
+  return state.temporada - ultimaTemporadaAparicion <= cooldownTemporadas;
+}
+
+export function esEventoElegible(
+  evento: Evento,
+  state: PlayerState,
+  ignorarCooldown = false
+): boolean {
   if (evento.esUnico && state.eventosVistos.includes(evento.id)) {
     return false;
   }
@@ -115,16 +146,13 @@ export function esEventoElegible(evento: Evento, state: PlayerState): boolean {
     return false;
   }
 
-  const esCategoriaNacional =
-    state.categoria === 'Karting Regional' ||
-    state.categoria === 'Karting Nacional' ||
-    state.categoria === 'Fórmula Nacional';
+  const maxEventos = cantidadCarrerasClave(state.categoria);
+  if (state.eventosUsadosTemporadaActual.length >= maxEventos) {
+    return false;
+  }
 
-  if (esCategoriaNacional) {
-    const deportivosUsados = state.historial.filter(
-      (h) => h.temporada === state.temporada && h.categoria === state.categoria
-    ).length;
-    if (evento.tipo === 'deportivo' && deportivosUsados >= 1) return false;
+  if (!ignorarCooldown && haOcurridoEnUltimasTemporadas(evento, state, 2)) {
+    return false;
   }
 
   if (evento.categoriaMinima) {
@@ -149,11 +177,52 @@ export function esEventoElegible(evento: Evento, state: PlayerState): boolean {
   return true;
 }
 
+export function interpolarTexto(
+  texto: string,
+  state: { rivalNombre: string; equipo?: string | null; nombre: string; edad?: number; categoria?: string }
+): string {
+  if (!texto) return '';
+  const equipoNombre = state.equipo || 'tu equipo';
+  const rivalNombre = state.rivalNombre || 'tu rival';
+  const pilotoNombre = state.nombre || 'Piloto';
+  const edadStr = state.edad !== undefined ? state.edad.toString() : '';
+
+  return texto
+    .replace(/\{RIVAL\}/gi, rivalNombre)
+    .replace(/Nico Varela/g, rivalNombre)
+    .replace(/\{EQUIPO\}/gi, equipoNombre)
+    .replace(/\{PILOTO\}/gi, pilotoNombre)
+    .replace(/\{NOMBRE\}/gi, pilotoNombre)
+    .replace(/\{EDAD\}/gi, edadStr);
+}
+
+export function interpolarEvento(evento: Evento, state: PlayerState): Evento {
+  return {
+    ...evento,
+    personajeRecurrente: evento.personajeRecurrente
+      ? interpolarTexto(evento.personajeRecurrente, state)
+      : undefined,
+    titulo: interpolarTexto(evento.titulo, state),
+    descripcion: interpolarTexto(evento.descripcion, state),
+    opciones: evento.opciones.map((opcion) => ({
+      ...opcion,
+      texto: interpolarTexto(opcion.texto, state),
+      consecuencias: {
+        ...opcion.consecuencias,
+        textoResultado: interpolarTexto(opcion.consecuencias.textoResultado, state),
+      },
+    })),
+  };
+}
+
 export function seleccionarEvento(
   eventos: Evento[],
   state: PlayerState
 ): Evento | null {
-  const elegibles = eventos.filter((e) => esEventoElegible(e, state));
+  let elegibles = eventos.filter((e) => esEventoElegible(e, state, false));
+  if (elegibles.length === 0) {
+    elegibles = eventos.filter((e) => esEventoElegible(e, state, true));
+  }
   if (elegibles.length === 0) return null;
 
   const pesoTotal = elegibles.reduce((acc, e) => acc + e.peso, 0);
@@ -167,11 +236,11 @@ export function seleccionarEvento(
   for (const evento of elegibles) {
     acumulado += evento.peso;
     if (randomVal <= acumulado) {
-      return evento;
+      return interpolarEvento(evento, state);
     }
   }
 
-  return elegibles[elegibles.length - 1];
+  return interpolarEvento(elegibles[elegibles.length - 1], state);
 }
 
 export function obtenerSiguienteCategoria(catActual: Categoria): Categoria {
@@ -512,10 +581,7 @@ export function aplicarOpcion(
     nuevosTags['lealtadEquipo'] = (nuevosTags['lealtadEquipo'] || 0) + 1;
   }
 
-  const textoResultadoConRival = consecuencias.textoResultado.replace(
-    /Nico Varela|{RIVAL}/g,
-    state.rivalNombre
-  );
+  const textoResultadoConRival = interpolarTexto(consecuencias.textoResultado, state);
 
   let estadoConHistorial: PlayerState = {
     ...state,
@@ -540,7 +606,10 @@ export function aplicarOpcion(
     ],
   };
 
-  if (consecuencias.avanzaCategoria || estadoConHistorial.historial.length % 3 === 0) {
+  const maxEventos = cantidadCarrerasClave(state.categoria);
+  const temporadaCompletada = estadoConHistorial.eventosUsadosTemporadaActual.length >= maxEventos;
+
+  if (consecuencias.avanzaCategoria || temporadaCompletada) {
     estadoConHistorial = resolverFinDeTemporada(estadoConHistorial);
   }
 
