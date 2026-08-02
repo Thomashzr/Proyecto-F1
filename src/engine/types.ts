@@ -10,6 +10,8 @@ export type Categoria =
   | 'FIA Fórmula 2'
   | 'Fórmula 1';
 
+export type RegionCategoria = 'Argentina' | 'Sudamérica' | 'Europa';
+
 export const CATEGORIAS_ORDEN: Categoria[] = [
   'Karting Regional',
   'Karting Nacional',
@@ -22,6 +24,19 @@ export const CATEGORIAS_ORDEN: Categoria[] = [
   'FIA Fórmula 2',
   'Fórmula 1',
 ];
+
+export const REGIONES_CATEGORIA: Record<Categoria, RegionCategoria> = {
+  'Karting Regional': 'Argentina',
+  'Karting Nacional': 'Argentina',
+  'Fórmula Nacional': 'Argentina',
+  'Fórmula 4 Brasil': 'Sudamérica',
+  'Fórmula 4 España': 'Europa',
+  'Fórmula 4 Italia': 'Europa',
+  'Formula Regional Europea': 'Europa',
+  'FIA Fórmula 3': 'Europa',
+  'FIA Fórmula 2': 'Europa',
+  'Fórmula 1': 'Europa',
+};
 
 export interface PlayerStats {
   velocidad: number;    // 0-100
@@ -66,6 +81,7 @@ export interface OfertaEquipo {
   nivelRendimiento: number;
   expectativas: string;
   prestigioFamaBonus: number;
+  esContinuidad?: boolean;
 }
 
 export interface ResumenCampeonato {

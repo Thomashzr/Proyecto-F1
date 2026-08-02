@@ -6,6 +6,7 @@ import {
   aplicarOpcion,
   obtenerOpcionesEntrenamiento,
   aplicarEntrenamiento,
+  evaluarFinales,
 } from '../engine/gameEngine';
 import { EVENTOS } from '../data/eventos';
 import { FINALES } from '../data/finales';
@@ -61,7 +62,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const estadoEntrenado = aplicarEntrenamiento(playerState, habilidadKey);
 
-    // Si hay ofertas de equipo pendientes por cambio de categoría o equipo, mostrar pantalla de ofertas
     if (estadoEntrenado.ofertasPendientes.length > 0) {
       set({
         playerState: estadoEntrenado,
@@ -134,7 +134,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    if (playerState.historialCampeonatos.length > 0 && playerState.historial.length % 3 === 0) {
+    // Bug 1 Fix: Mostrar resumen de temporada SIEMPRE que concluya una temporada (incluida la Temporada 1)
+    if (playerState.historial.length % 3 === 0) {
       set({
         feedbackResultado: null,
         pantallaActual: 'resumenTemporada',
@@ -186,17 +187,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { playerState } = get();
     if (!playerState) return;
 
-    const finalRetiroObj = FINALES.find((f) => f.id === 'final-quema-mental-abandono') || FINALES[0];
-
     const estadoFinalizado: PlayerState = {
       ...playerState,
       finalizado: true,
-      finalObtenido: finalRetiroObj.id,
     };
 
+    const estadoEvaluado = evaluarFinales(estadoFinalizado, FINALES);
+    const finalObtenidoObj = FINALES.find((f) => f.id === estadoEvaluado.finalObtenido) || FINALES[FINALES.length - 1];
+
     set({
-      playerState: estadoFinalizado,
-      finalActual: finalRetiroObj,
+      playerState: estadoEvaluado,
+      finalActual: finalObtenidoObj,
       pantallaActual: 'resultado',
     });
   },

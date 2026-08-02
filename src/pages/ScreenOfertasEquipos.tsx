@@ -8,6 +8,8 @@ export const ScreenOfertasEquipos: React.FC = () => {
 
   if (!playerState || playerState.ofertasPendientes.length === 0) return null;
 
+  const esOfertaF1 = playerState.ofertasPendientes.some((o) => o.categoria === 'Fórmula 1');
+
   return (
     <div className="min-h-screen bg-asfalto carbon-texture flex flex-col items-center justify-center p-4 sm:p-8">
       <motion.div
@@ -18,14 +20,17 @@ export const ScreenOfertasEquipos: React.FC = () => {
       >
         <div className="border-b border-asfalto-border pb-4">
           <span className="font-mono text-xs text-telemetria uppercase tracking-widest block font-semibold">
-            OFERTAS DE ESCUDERÍA RECIBIDAS • TEMPORADA {playerState.temporada}
+            MERKATO DE FICHAJES • TEMPORADA {playerState.temporada}
           </span>
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white tracking-wide mt-1">
-            SELECCIONÁ TU PRÓXIMO EQUIPO
+            {esOfertaF1
+              ? '🏆 ¡SUPERLICENCIA F1 ALCANZADA! OFERTAS TITULARES'
+              : 'OFERTAS DE ESCUDERÍA RECIBIDAS'}
           </h1>
           <p className="text-telemetria text-xs sm:text-sm mt-2 font-sans">
-            Tus actuaciones despertaron el interés de estas escuderías para competir en{' '}
-            <strong className="text-f1red-light uppercase">{playerState.categoria}</strong>.
+            {esOfertaF1
+              ? 'Tus actuaciones te abrieron las puertas de la máxima categoría mundial del deporte motor. Elegí tu escudería de F1 o renová un año más para ganar experiencia.'
+              : `Tus actuaciones despertaron el interés de varias escuderías. Elegí tu destino o mantené la continuidad en tu equipo.`}
           </p>
         </div>
 
@@ -34,18 +39,24 @@ export const ScreenOfertasEquipos: React.FC = () => {
             <button
               key={oferta.id || idx}
               onClick={() => elegirOfertaEquipo(oferta)}
-              className="w-full text-left p-4 bg-asfalto border border-asfalto-border hover:border-f1red hover:bg-asfalto-hover rounded-md transition-all duration-150 group flex flex-col gap-2 active:scale-[0.99]"
+              className={`w-full text-left p-4 border rounded-md transition-all duration-150 group flex flex-col gap-2 active:scale-[0.99] ${
+                oferta.esContinuidad
+                  ? 'bg-asfalto/80 border-telemetria-gold/60 hover:border-telemetria-gold hover:bg-asfalto-hover'
+                  : 'bg-asfalto border-asfalto-border hover:border-f1red hover:bg-asfalto-hover'
+              }`}
             >
               <div className="flex items-center justify-between">
                 <span className="font-display text-lg font-bold text-white group-hover:text-f1red-light uppercase">
-                  {oferta.nombre}
+                  {oferta.esContinuidad
+                    ? `🔄 PERMANECER EN ${oferta.nombre}`
+                    : oferta.nombre}
                 </span>
                 <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded">
-                  RENDIMIENTO {oferta.nivelRendimiento}%
+                  {oferta.categoria.toUpperCase()}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs font-mono text-telemetria">
-                <span>País: {oferta.pais}</span>
+                <span>{oferta.esContinuidad ? 'Renovación de Contrato' : `País: ${oferta.pais}`}</span>
                 <span className="text-telemetria-gold">Expectativa: {oferta.expectativas}</span>
               </div>
             </button>

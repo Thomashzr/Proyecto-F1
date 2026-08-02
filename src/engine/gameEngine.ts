@@ -107,7 +107,6 @@ export function esEventoElegible(evento: Evento, state: PlayerState): boolean {
     return false;
   }
 
-  // Regla Bug 1: Categorías Nacionales solo 1 deportivo + max 1 extradeportivo por temporada
   const esCategoriaNacional =
     state.categoria === 'Karting Regional' ||
     state.categoria === 'Karting Nacional' ||
@@ -219,7 +218,6 @@ export function obtenerOpcionesEntrenamiento(state: PlayerState): OpcionEntrenam
   const mezcladas = [...habilidadesBase].sort(() => getRandom() - 0.5);
   const seleccion = mezcladas.slice(0, getRandom() > 0.5 ? 4 : 3);
 
-  // Reducción de delta de entrenamiento a +4 (Bug 2a)
   return seleccion.map((item) => ({
     habilidad: item.key,
     titulo: item.titulo,
@@ -244,7 +242,7 @@ export function aplicarEntrenamiento(
 }
 
 /**
- * Genera 3 ofertas de escudería para la categoría destino (Bug 2b).
+ * Genera ofertas de escuderías incluyendo SIEMPRE la opción de continuidad (Bug 2, 5b, 7).
  */
 export function generarOfertasEscuderias(
   state: PlayerState,
@@ -279,7 +277,7 @@ export function generarOfertasEscuderias(
   const mezclados = [...poolEquipos].sort(() => getRandom() - 0.5);
   const seleccion = mezclados.slice(0, 3);
 
-  return seleccion.map((eq, idx) => ({
+  const ofertasNuevas: OfertaEquipo[] = seleccion.map((eq, idx) => ({
     id: eq.id,
     nombre: eq.nombre,
     categoria: categoriaDestino,
@@ -293,11 +291,22 @@ export function generarOfertasEscuderias(
         : 'Desarrollo de Monoplaza',
     prestigioFamaBonus: Math.round(eq.nivelRendimiento / 10),
   }));
+
+  // Opción explícita de continuidad en el equipo actual (Bug 2 & 5b)
+  const ofertaContinuidad: OfertaEquipo = {
+    id: 'continuidad-equipo-actual',
+    nombre: state.equipo || 'Escudería Actual',
+    categoria: state.categoria,
+    pais: 'Actual',
+    nivelRendimiento: 80,
+    expectativas: 'Consolidación de Contrato',
+    prestigioFamaBonus: 5,
+    esContinuidad: true,
+  };
+
+  return [ofertaContinuidad, ...ofertasNuevas];
 }
 
-/**
- * Aplica el declive progresivo de habilidades a partir de los 30 años (Bug 4).
- */
 export function aplicarDecliveEdad(state: PlayerState): PlayerStats {
   const stats = { ...state.stats };
   if (state.edad < 30) return stats;
@@ -392,13 +401,11 @@ export function resolverFinDeTemporada(state: PlayerState): PlayerState {
   const resumenAño = simularCarrerasRestantes(state);
   const ovr = calcularMediaGeneral(state.stats);
 
-  // Aplicar declive de edad a partir de los 30 años (Bug 4)
   const nuevasStats = aplicarDecliveEdad(state);
 
   let nuevaCategoria = state.categoria;
   const idxActual = CATEGORIAS_ORDEN.indexOf(state.categoria);
 
-  // Progresión no lineal según OVR y podios del campeonato
   if ((ovr >= 50 || resumenAño.posicionFinal <= 5) && idxActual < CATEGORIAS_ORDEN.length - 1) {
     nuevaCategoria = CATEGORIAS_ORDEN[idxActual + 1];
   }
@@ -407,11 +414,9 @@ export function resolverFinDeTemporada(state: PlayerState): PlayerState {
   let finalizado = state.finalizado;
   let finalObtenido = state.finalObtenido;
 
-  // Límite de edad máxima 38 años (Bug 4)
   if (nuevaEdad >= 38) {
     finalizado = true;
-    finalObtenido = 'final-estancado-rendimiento-bajo';
-  } else if (nuevaEdad >= 26 && nuevaCategoria !== 'Fórmula 1' && ovr < 50) {
+  } else if (nuevaEdad >= 28 && nuevaCategoria !== 'Fórmula 1' && ovr < 45) {
     finalizado = true;
     finalObtenido = 'final-estancado-inferiores';
   }
@@ -448,12 +453,11 @@ export function aplicarOpcion(
   const consecuencias = opcion.consecuencias;
   const nuevasStats: PlayerStats = { ...state.stats };
 
-  // Aplicar deltas reducidos de evento (Bug 2a)
   if (consecuencias.stats) {
     (Object.keys(consecuencias.stats) as StatKey[]).forEach((key) => {
       const delta = consecuencias.stats[key];
       if (typeof delta === 'number') {
-        const deltaAjustado = Math.round(delta * 0.5); // Escalar deltas a valores suaves
+        const deltaAjustado = Math.round(delta * 0.5);
         nuevasStats[key] = clamp(nuevasStats[key] + deltaAjustado, 0, 100);
       }
     });
@@ -472,7 +476,6 @@ export function aplicarOpcion(
   const nuevoJuegoSucioCount =
     state.juegoSucioCount + (consecuencias.incrementaJuegoSucio ? 1 : 0);
 
-  // Reemplazar marcador dinámico {RIVAL} en la narración de resultado
   const textoResultadoConRival = consecuencias.textoResultado.replace(
     /Nico Varela|{RIVAL}/g,
     state.rivalNombre

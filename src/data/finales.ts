@@ -7,7 +7,7 @@ export const FINALES: Final[] = [
     subtitulo: 'Sin la velocidad requerida para mantener el asiento.',
     descripcion: 'Tras varias temporadas sin alcanzar los tiempos mínimos de clasificación, el equipo decidió no renovar tu plaza. Diste todo en la pista.',
     esExito: false,
-    evaluar: (state) => state.stats.velocidad <= 20 && state.stats.consistencia <= 20,
+    evaluar: (state) => (state.finalizado || state.edad >= 38) && state.stats.velocidad <= 20,
   },
   {
     id: 'final-quema-mental-abandono',
@@ -23,7 +23,7 @@ export const FINALES: Final[] = [
     subtitulo: 'En este deporte el talento no alcanza si no hay resultados.',
     descripcion: 'Tu equipo rescindió tu contrato unilateralmente. Sin patrocinantes ni velocidad suficiente en pista, te quedaste sin asiento.',
     esExito: false,
-    evaluar: (state) => state.stats.velocidad <= 15,
+    evaluar: (state) => (state.finalizado || state.edad >= 38) && state.stats.velocidad <= 15,
   },
   {
     id: 'final-estancado-inferiores',
@@ -31,7 +31,7 @@ export const FINALES: Final[] = [
     subtitulo: 'El sueño de la Fórmula 1 quedó fuera de alcance.',
     descripcion: 'Pasaron los años y los equipos grandes buscaron talentos más jóvenes. Te convertiste en un veterano respetado de categorías zonales, pero sin llegar a la cima.',
     esExito: false,
-    evaluar: (state) => state.edad >= 26 && state.categoria !== 'Fórmula 1',
+    evaluar: (state) => (state.finalizado || state.edad >= 38 || (state.edad >= 28 && state.stats.velocidad < 45)) && state.categoria !== 'Fórmula 1',
   },
   {
     id: 'final-f1-campeon-sucio',
@@ -40,10 +40,10 @@ export const FINALES: Final[] = [
     descripcion: 'Lograste lo máximo: el título mundial de Fórmula 1. Pero en los libros de historia tu nombre quedará asociado a sobrepasos al límite y una ambición despiadada.',
     esExito: true,
     evaluar: (state) =>
+      (state.finalizado || state.edad >= 38) &&
       state.categoria === 'Fórmula 1' &&
-      state.stats.velocidad >= 75 &&
-      state.juegoSucioCount >= 2 &&
-      state.temporada >= 7,
+      state.stats.velocidad >= 70 &&
+      state.juegoSucioCount >= 2,
   },
   {
     id: 'final-f1-campeon-del-mundo',
@@ -52,10 +52,10 @@ export const FINALES: Final[] = [
     descripcion: 'Dominaste los circuitos con maestría técnica pura y velocidad letal. Te coronaste Campeón Mundial de F1 de forma impecable. Un ídolo eterno.',
     esExito: true,
     evaluar: (state) =>
+      (state.finalizado || state.edad >= 38) &&
       state.categoria === 'Fórmula 1' &&
-      state.stats.velocidad >= 80 &&
-      state.stats.consistencia >= 75 &&
-      state.temporada >= 7,
+      state.stats.velocidad >= 75 &&
+      state.stats.consistencia >= 65,
   },
   {
     id: 'final-f1-subcampeon-agridulce',
@@ -64,9 +64,9 @@ export const FINALES: Final[] = [
     descripcion: 'Peleaste el campeonato mundial mano a mano hasta el último GP. Una falla técnica o una maniobra desesperada de tu rival te privó del título.',
     esExito: true,
     evaluar: (state) =>
+      (state.finalizado || state.edad >= 38) &&
       state.categoria === 'Fórmula 1' &&
-      state.stats.velocidad >= 70 &&
-      state.temporada >= 7,
+      state.stats.velocidad >= 60,
   },
   {
     id: 'final-f1-mitad-de-tabla',
@@ -74,6 +74,6 @@ export const FINALES: Final[] = [
     subtitulo: 'Corriste años en la máxima categoría con orgullo y dignidad.',
     descripcion: 'Llegaste a la Fórmula 1 y sumaste podios esporádicos en equipos de mitad de tabla. Viviste el sueño que millones persiguen.',
     esExito: true,
-    evaluar: (state) => state.categoria === 'Fórmula 1' && state.temporada >= 7,
+    evaluar: (state) => (state.finalizado || state.edad >= 38) && state.categoria === 'Fórmula 1',
   },
 ];

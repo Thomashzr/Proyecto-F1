@@ -44,7 +44,7 @@ export const ScreenInicio: React.FC = () => {
           </span>
         </div>
         <span className="font-mono text-xs text-f1red font-bold uppercase bg-f1red/10 border border-f1red/30 px-2 py-0.5 rounded">
-          VERSIÓN ALPHA v0.4
+          VERSIÓN ALPHA v0.5.0
         </span>
       </div>
 

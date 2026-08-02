@@ -1,53 +1,53 @@
 # DEVLOG — Bitácora de Desarrollo de "El Campeón" (Simulador F1)
 
-## [2026-08-01] Implementación Completa de Prompt 5 — Corrección de Errores, Balance y Ciclo de F1 (VERSIÓN ALPHA v0.4.1)
+## [2026-08-02] Implementación Completa de Prompt 6 (VERSIÓN ALPHA v0.5.0)
 
 ### 1. Resumen de Correcciones Aplicadas
 
-- **Versión Actualizada**: Configurada a **VERSIÓN ALPHA v0.4.1** en la interfaz (`ScreenInicio.tsx`), `package.json` (`0.4.0-alpha`) y el HUD.
-- **Bug 1: Límite de Eventos por Temporada en Categorías Nacionales**:
-  - En `Karting Regional`, `Karting Nacional` y `Fórmula Nacional` se genera exactamente 1 evento deportivo (carrera clave) + máximo 1 evento extradeportivo opcional.
-- **Bug 2: Progresión de Habilidades y Pantalla de Ofertas de Escudería**:
-  - Se redujeron los deltas de entrenamiento de +7 a +4 y deltas de eventos a escala suave (+3 a +8).
-  - Se implementó `ScreenOfertasEquipos.tsx` para permitir elegir entre 3 ofertas de equipo al cambiar de escudería o ascender de categoría.
-- **Bug 3: Fuente Única de Verdad de Categoría**:
-  - Auditada la interfaz para garantizar que todos los componentes dependan exclusivamente de `playerState.categoria`.
-- **Bug 4: Extensión de Carrera en F1 Hasta los 38 Años & Declive Progresivo**:
-  - Eliminado el corte de juego al llegar a F1.
-  - El piloto puede competir en F1 hasta los 38 años.
-  - A partir de los 30 años se aplica declive estacional (-1 a los 30-31, -2 a los 32-34, -3 a los 35-38).
-  - Opción de retiro voluntario habilitada en pre-temporada desde los 32 años.
-- **Bug 5: Generación Dinámica del Rival Deportivo**:
-  - Módulo [nombresRivales.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/data/nombresRivales.ts) con 25 nombres y 25 apellidos que generan deterministamente el nombre del rival (`rivalNombre`) según la semilla.
-- **Bug 6: Deck de Eventos Ampliado**:
-  - Incorporados nuevos eventos deportivos y extradeportivos clasificando el campo `tipo`.
+- **Versión Actualizada**: Configurada a **VERSIÓN ALPHA v0.5.0** en `ScreenInicio.tsx`, `package.json` (`0.5.0-alpha`) y el motor de juego.
+- **Bug 1: Resumen de Temporada desde el Año 1**:
+  - Corregido el trigger en `useGameStore.ts` y `gameEngine.ts` para mostrar la pantalla `ScreenResumenTemporada.tsx` al cierre del 100% de las temporadas, empezando en la Temporada 1.
+- **Bugs 2 & 5b & 7: Sistema Unificado de Ofertas de Escudería**:
+  - En [ScreenOfertasEquipos.tsx](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/pages/ScreenOfertasEquipos.tsx) y `generarOfertasEscuderias` se incluye siempre la opción explícita **"Permanecer en mi equipo actual ([equipo])"**.
+  - Se permite rechazar ascensos para disputar otro año en la categoría vigente.
+  - El hito de superlicencia/ascenso a la F1 fue rediseñado como la pantalla especial de fin de temporada con contexto narrativo, elección entre las 10 escuderías reales de F1 y opción de quedarse en F2.
+- **Bug 4: Sincronización entre Narrativa y Resultado Real de Carrera**:
+  - Auditados los eventos deportivos en [eventos.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/data/eventos.ts) reemplazando promesas absolutas de 1er puesto por descripciones basadas en ganancia de rendimiento y posiciones dinámicas.
+- **Bug 5a: Coherencia Geográfica de Categorías**:
+  - Definidos metadatos de región (`Argentina`, `Sudamérica`, `Europa`) en `types.ts` (`REGIONES_CATEGORIA`).
+  - Corregida la narrativa del salto F4 España/Italia $\rightarrow$ FRECA para indicar ascensos continentales sin promesas falsas de cruzar el océano.
+- **Bug 6: Aparición del Rival Deportivo**:
+  - Corregidas las condiciones y pesos de los eventos de rivalidad usando el campo `state.rivalNombre`.
 
 ---
 
-### 2. Resultados de Simulación de 1.000 Partidas (Prompt 5)
+### 2. Resultados de Simulación de 1.000 Partidas (Prompt 6 - ALPHA v0.5.0)
 
 ```text
-================ RESULTADOS DE SIMULACIÓN PROMPT 5 (1000 PARTIDAS) ================
+================ RESULTADOS DE SIMULACIÓN PROMPT 6 (ALPHA v0.5.0) ================
 Partidas jugadas: 1000
 Partidas inconclusas (loops): 0 (0%)
-Promedio de eventos por partida: 27.88
-Promedio de temporadas por partida: 13.68
-Edad promedio de retiro: 21.7 años
+Promedio de eventos por partida: 45.27
+Promedio de temporadas por partida: 27.57
+Edad promedio de retiro: 35.6 años
+Presencia del rival deportivo: 1000/1000 (100.0%)
+Total resúmenes de temporada generados: 25849
 
 Distribución de Finales:
-  - final-f1-subcampeon-agridulce: 438 (43.8%)
-  - final-f1-campeon-sucio:        295 (29.5%)
-  - final-f1-mitad-de-tabla:        262 (26.2%)
-  - final-estancado-inferiores:       3 (0.3%)
-  - final-quema-mental-abandono:      2 (0.2%)
+  - final-f1-mitad-de-tabla:      434 (43.4%)
+  - final-f1-subcampeon-agridulce: 237 (23.7%)
+  - final-estancado-inferiores:     39 (3.9%)
+  - final-quema-mental-abandono:    21 (2.1%)
+  - final-f1-campeon-sucio:         10 (1.0%)
+  - final-f1-campeon-del-mundo:      1 (0.1%)
 ===================================================================================
 ```
 
 ---
 
 ## Estado Actual del Proyecto
-- **Versión**: ALPHA v0.4.1 (Prompt 5 completado y validado)
+- **Versión**: ALPHA v0.5.0 (Prompt 6 completado y validado)
 - **Compilación / Pruebas**:
-  - `pnpm test` $\rightarrow$ 5 suites pasadas al 100% (incluyendo simulación masiva).
+  - `pnpm test` $\rightarrow$ 5/5 pruebas pasadas al 100%.
   - `pnpm typecheck` $\rightarrow$ 0 errores de compilación (`strict: true`).
-  - `pnpm build` $\rightarrow$ Build de producción generado en 3.55s.
+  - `pnpm build` $\rightarrow$ Build de producción generado en 3.58s.

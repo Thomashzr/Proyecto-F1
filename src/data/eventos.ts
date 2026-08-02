@@ -9,7 +9,7 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
-    peso: 15,
+    peso: 20,
     titulo: 'Chasis usado y motor con mañas',
     descripcion: 'Llegás al campeonato zonal con un karting usado que le compraste a un vecino. En la clasificación sintió una falla de carburación en baja.',
     opciones: [
@@ -17,7 +17,7 @@ export const EVENTOS: Evento[] = [
         texto: 'Meter mano al carburador solo en el parque cerrado',
         consecuencias: {
           stats: { velocidad: 4, gestion: -2 },
-          textoResultado: 'Carburaste justo a tiempo. El motor respondió y metiste el 3er mejor tiempo de tanda.',
+          textoResultado: 'Carburaste justo a tiempo. El motor respondió mejor y ganaste valiosas posiciones en la tanda.',
         },
       },
       {
@@ -34,7 +34,7 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
-    peso: 15,
+    peso: 20,
     titulo: 'Tormenta sobre la pista de barro',
     descripcion: 'Faltan 5 minutos para la largada y se largó una cortina de agua en Buenos Aires. No tenés presupuesto para ganchos de lluvia nuevos.',
     opciones: [
@@ -42,14 +42,14 @@ export const EVENTOS: Evento[] = [
         texto: 'Largar con cubiertas lisas gastadas y controlar con la mano al aire',
         consecuencias: {
           stats: { lluvia: 6, consistencia: -3 },
-          textoResultado: 'Fue una lección magistral de control en mojado. Saliste 2do trompeando en la última curva.',
+          textoResultado: 'Fue una lección magistral de control en mojado. Cruzás la meta peleando los puestos de cabeza.',
         },
       },
       {
         texto: 'Hipotecar ahorros familiares para comprar gomas de lluvia usadas',
         consecuencias: {
           stats: { gestion: 5, popularidad: 3 },
-          textoResultado: 'Ganas la carrera holgado, pero la discusión financiera en casa fue dura.',
+          textoResultado: 'Completás la carrera con gran ritmo sobre el asfalto mojado, aunque la discusión económica fue dura.',
         },
       },
     ],
@@ -59,7 +59,7 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
-    peso: 20,
+    peso: 25,
     personajeRecurrente: '{RIVAL}',
     esUnico: true,
     titulo: 'Toque con {RIVAL} en la chicana',
@@ -70,14 +70,14 @@ export const EVENTOS: Evento[] = [
         consecuencias: {
           stats: { ataque: 5, popularidad: -3 },
           incrementaJuegoSucio: true,
-          textoResultado: 'Lo dejaste cruzado sobre el piano. Saliste campeón regional, pero te ganaste un enemigo de por vida.',
+          textoResultado: 'Lo dejaste cruzado sobre el piano. Saliste adelante en la pista, pero te ganaste una rivalidad picante.',
         },
       },
       {
         texto: 'Cruzar el kart por la huella limpia y esperar el error',
         consecuencias: {
           stats: { defensa: 5, consistencia: 4 },
-          textoResultado: '{RIVAL} se pasó de frenada dos vueltas después. Cruzaste la meta victorioso y con aplausos del comisariato.',
+          textoResultado: '{RIVAL} se pasó de frenada dos vueltas después. Superás su karting con aplausos del comisariato.',
         },
       },
     ],
@@ -87,7 +87,7 @@ export const EVENTOS: Evento[] = [
     tipo: 'extradeportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
-    peso: 12,
+    peso: 15,
     titulo: 'El trailer que se rompió en la ruta',
     descripcion: 'A mitad de camino al kartódromo nacional, se rompió el eje del trailer. Si no llegás a la técnica antes de las 8 AM, quedás excluido.',
     opciones: [
@@ -129,26 +129,27 @@ export const EVENTOS: Evento[] = [
     ],
   },
   {
-    id: 'karting-06-motor-preparador',
+    id: 'karting-06-rival-box-vecino',
     tipo: 'extradeportivo',
     categoriaMinima: 'Karting Regional',
     categoriaMaxima: 'Karting Nacional',
-    peso: 15,
-    titulo: 'Motor preparado por un histórico de la zonal',
-    descripcion: 'Un legendario preparador de motores te ofrece una tapa de cilindros trabajada en su taller artesanal.',
+    peso: 25,
+    personajeRecurrente: '{RIVAL}',
+    titulo: 'Provocaciones de {RIVAL} en el box vecino',
+    descripcion: '{RIVAL} y su mecánico pasean frente a tu carpa riéndose de tu juego de cubiertas usadas.',
     opciones: [
       {
-        texto: 'Aceptar el motor preparado y probar la potencia en rectas',
+        texto: 'Ignorarlos por completo y concentrarte en afilar el eje',
         consecuencias: {
-          stats: { velocidad: 5, gestion: 3 },
-          textoResultado: 'El motor vuela en alta. Lográs tiempos de punta en las tandas libres.',
+          stats: { consistencia: 5, defensa: 4 },
+          textoResultado: 'Mantuviste la cabeza fría. En pista respondiste con tiempos impecables.',
         },
       },
       {
-        texto: 'Mantener la mecánica estándar para priorizar fiabilidad',
+        texto: 'Mandarles una mirada desafiante y subir el volumen de la música',
         consecuencias: {
-          stats: { consistencia: 5, defensa: 3 },
-          textoResultado: 'El motor no falla nunca. Rescatás podios constantes.',
+          stats: { fama: 4, popularidad: 4 },
+          textoResultado: 'Marcaste presencia en los pits. La tensión entre ambos carpas es evidente.',
         },
       },
     ],
@@ -162,7 +163,7 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
-    peso: 15,
+    peso: 20,
     titulo: 'La carga aerodinámica del F4',
     descripcion: 'Tu primer test oficial en monoplaza. La dirección y la fuerza G en el cuello te exigen al límite.',
     opciones: [
@@ -212,7 +213,7 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
-    peso: 15,
+    peso: 18,
     titulo: 'Bloqueada y paredón a 180 km/h',
     descripcion: 'Poblada la Curva 1, te quedaste sin frenos por sobrecalentamiento de líquido y golpeaste de costado.',
     opciones: [
@@ -237,10 +238,10 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Fórmula Nacional',
     categoriaMaxima: 'Fórmula 4 Italia',
-    peso: 18,
+    peso: 25,
     personajeRecurrente: '{RIVAL}',
     esUnico: true,
-    titulo: '{RIVAL} reaparece en F4',
+    titulo: '{RIVAL} reaparece en monoplazas',
     descripcion: '{RIVAL} reaparece con el equipo líder. En la conferencia de prensa dice que vos sólo estás ahí por suerte.',
     opciones: [
       {
@@ -261,31 +262,6 @@ export const EVENTOS: Evento[] = [
     ],
   },
   {
-    id: 'f4-05-orden-de-equipo',
-    tipo: 'extradeportivo',
-    categoriaMinima: 'Fórmula Nacional',
-    categoriaMaxima: 'Fórmula 4 Italia',
-    peso: 15,
-    titulo: 'Orden de equipo por radio en la última vuelta',
-    descripcion: 'Vas 1ro pero tu compañero de equipo se juega el campeonato de marcas. La radio te ordena: "Dejalo pasar en la recta".',
-    opciones: [
-      {
-        texto: 'Acatar la orden y frenar unos metros antes de la línea',
-        consecuencias: {
-          stats: { consistencia: 8, popularidad: -3 },
-          textoResultado: 'Hiciste el trabajo sucio. El dueño del equipo te prometió prioridad para el próximo año.',
-        },
-      },
-      {
-        texto: 'Simular falla de radio ("Radio check, no los escucho") y ganar',
-        consecuencias: {
-          stats: { velocidad: 4, fama: 8, popularidad: -8 },
-          textoResultado: 'Ganaste la carrera. Festejaste solo en el podio mientras el box ardía.',
-        },
-      },
-    ],
-  },
-  {
     id: 'f4-06-oferta-freca',
     tipo: 'extradeportivo',
     categoriaMinima: 'Fórmula 4 Brasil',
@@ -297,12 +273,12 @@ export const EVENTOS: Evento[] = [
     descripcion: 'Una escudería europea te ofrece dar el salto a FRECA en los circuitos continentales.',
     opciones: [
       {
-        texto: 'Firmar con el equipo de FRECA y mudar tus pertenencias a Europa',
+        texto: 'Firmar con el equipo de FRECA y consolidar tu presencia en Europa',
         consecuencias: {
           stats: { fama: 10, velocidad: 5 },
           avanzaCategoria: true,
           cambioEquipo: 'ART Grand Prix FRECA',
-          textoResultado: 'Armás las valijas. Estás en la antesala real de la Fórmula 3.',
+          textoResultado: 'Confirmás tu contrato en FRECA. Estás en la antesala real de la Fórmula 3.',
         },
       },
     ],
@@ -316,7 +292,7 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Formula Regional Europea',
     categoriaMaxima: 'FIA Fórmula 2',
-    peso: 15,
+    peso: 20,
     titulo: 'Silverstone bajo temporal británico',
     descripcion: 'Pista inundada en Copse. Los monoplazas hacen aquaplaning a 240 km/h. La mitad de los autos están desparramados en el pasto.',
     opciones: [
@@ -324,7 +300,7 @@ export const EVENTOS: Evento[] = [
         texto: 'Soltar el acelerador 50 metros antes y buscar tracción por fuera',
         consecuencias: {
           stats: { lluvia: 8, consistencia: 5 },
-          textoResultado: 'Espectacular lección de manejo sobre agua. Ganás 4 posiciones.',
+          textoResultado: 'Espectacular lección de manejo sobre agua. Ganás posiciones clave.',
         },
       },
       {
@@ -341,7 +317,8 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Formula Regional Europea',
     categoriaMaxima: 'FIA Fórmula 2',
-    peso: 15,
+    peso: 25,
+    personajeRecurrente: '{RIVAL}',
     titulo: 'Sospechas sobre la telemetría del equipo',
     descripcion: 'Descubrís que el ingeniero jefe le entrega tus mapas de aceleración y puntos de frenada a {RIVAL}, tu compañero de equipo.',
     opciones: [
@@ -361,54 +338,6 @@ export const EVENTOS: Evento[] = [
       },
     ],
   },
-  {
-    id: 'f3-03-trampa-aleron',
-    tipo: 'deportivo',
-    categoriaMinima: 'Formula Regional Europea',
-    categoriaMaxima: 'FIA Fórmula 2',
-    peso: 15,
-    titulo: 'Zona gris del reglamento técnico',
-    descripcion: 'Tu mecánico te propone instalar un alerón flexible que pasa las verificaciones pero se deforma a alta velocidad ganando 8 km/h.',
-    opciones: [
-      {
-        texto: 'Aceptar colocar el alerón clandestino',
-        consecuencias: {
-          stats: { velocidad: 6, popularidad: -8 },
-          incrementaJuegoSucio: true,
-          textoResultado: 'Ganaste la pole por amplio margen, aunque en el paddock se rumorea tu trampa.',
-        },
-      },
-      {
-        texto: 'Exigir correr 100% legal respetando la reglamentación',
-        consecuencias: {
-          stats: { popularidad: 10, consistencia: 5 },
-          textoResultado: 'Mantuviste el honor intacto. Tu reputación de piloto limpio crece entre los jefes de F1.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'f3-04-superlicencia-f1',
-    tipo: 'extradeportivo',
-    categoriaMinima: 'FIA Fórmula 2',
-    categoriaMaxima: 'FIA Fórmula 2',
-    condiciones: [{ stat: 'velocidad', operador: '>=', valor: 55 }],
-    peso: 45,
-    esUnico: true,
-    titulo: 'Puntos de Superlicencia FIA alcanzados',
-    descripcion: 'Completaste los puntos requeridos para la Superlicencia. Un equipo de F1 te ofrece asiento titular para el próximo año.',
-    opciones: [
-      {
-        texto: 'Firmar contrato de F1 y cumplir el sueño de toda tu vida',
-        consecuencias: {
-          stats: { fama: 18, popularidad: 12 },
-          avanzaCategoria: true,
-          cambioEquipo: 'Williams Racing F1',
-          textoResultado: '¡LLEGASTE A LA FÓRMULA 1! Tu nombre estará en las grillas oficiales.',
-        },
-      },
-    ],
-  },
 
   // ==========================================
   // FÓRMULA 1
@@ -418,7 +347,7 @@ export const EVENTOS: Evento[] = [
     tipo: 'deportivo',
     categoriaMinima: 'Fórmula 1',
     categoriaMaxima: 'Fórmula 1',
-    peso: 15,
+    peso: 20,
     esUnico: true,
     titulo: 'Gran Premio debut en Albert Park, Melbourne',
     descripcion: 'Apagan los 5 semáforos rojos. 20 monoplazas rugen hacia la Curva 1. Tenés al campeón mundial vigente a tu lado.',
@@ -427,7 +356,7 @@ export const EVENTOS: Evento[] = [
         texto: 'Aprovechar el hueco interno entre dos autos para avanzar 3 puestos',
         consecuencias: {
           stats: { ataque: 8, velocidad: 8, fama: 10 },
-          textoResultado: '¡Debut de ensueño! Sumás tus primeros puntos en la máxima categoría.',
+          textoResultado: '¡Debut brillante! Demostrás temple de piloto oficial en la máxima categoría.',
         },
       },
       {
@@ -444,15 +373,16 @@ export const EVENTOS: Evento[] = [
     tipo: 'extradeportivo',
     categoriaMinima: 'Fórmula 1',
     categoriaMaxima: 'Fórmula 1',
-    peso: 18,
-    titulo: 'Tensión máxima con tu compañero en F1',
-    descripcion: 'En las tandas de clasificación, tu compañero de equipo frena de golpe delante tuyo quitándote la posibilidad del último intento.',
+    peso: 25,
+    personajeRecurrente: '{RIVAL}',
+    titulo: 'Tensión máxima con {RIVAL} en F1',
+    descripcion: 'En las tandas de clasificación, {RIVAL} frena de golpe delante tuyo en la chicana quitándote la posibilidad del último intento.',
     opciones: [
       {
         texto: 'Denunciarlo en los micrófonos internacionales de la transmisión',
         consecuencias: {
           stats: { fama: 10, popularidad: -8 },
-          textoResultado: 'Guerra civil desatada en la escudería. Las fotos tuyas y de tu compañero ocupan todas las portadas.',
+          textoResultado: 'Guerra civil desatada en la escudería. Las fotos tuyas y de {RIVAL} ocupan todas las portadas.',
         },
       },
       {
@@ -460,83 +390,6 @@ export const EVENTOS: Evento[] = [
         consecuencias: {
           stats: { ataque: 8, defensa: 8 },
           textoResultado: 'Le metiste el auto en la chicana sin dudar. El mensaje quedó clarísimo en la pista.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'f1-03-desarrollo-monoplaza',
-    tipo: 'deportivo',
-    categoriaMinima: 'Fórmula 1',
-    categoriaMaxima: 'Fórmula 1',
-    peso: 15,
-    titulo: 'Elección de paquete aerodinámico',
-    descripcion: 'El equipo te da a elegir entre dos paquetes de mejoras: uno agresivo de alta velocidad punta o uno dócil de alta carga.',
-    opciones: [
-      {
-        texto: 'Pedir el paquete de velocidad punta agresivo para sobrepasos',
-        consecuencias: {
-          stats: { velocidad: 8, ataque: 5 },
-          textoResultado: 'El auto se volvió una bestia en las rectas. Lográs velocidades récord de punta.',
-        },
-      },
-      {
-        texto: 'Pedir el paquete dócil y equilibrado que cuida los neumáticos',
-        consecuencias: {
-          stats: { gestion: 10, consistencia: 8 },
-          textoResultado: 'Tus ritmos de carrera son los más consistentes de la parrilla.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'f1-04-pole-monaco',
-    tipo: 'deportivo',
-    categoriaMinima: 'Fórmula 1',
-    categoriaMaxima: 'Fórmula 1',
-    peso: 15,
-    esUnico: true,
-    titulo: 'Vuelo rasante buscando la Pole Position en Mónaco',
-    descripcion: 'Q3 en Mónaco. Rozás los guardarraíles a milímetros en Rascasse. Vas bajando 2 décimas el tiempo del récord.',
-    opciones: [
-      {
-        texto: 'Pisar el acelerador un 5% antes en la salida hacia la recta de meta',
-        consecuencias: {
-          stats: { velocidad: 12, fama: 15 },
-          textoResultado: '¡POLE POSITION EN MÓNACO! Una de las vueltas clasificatorias más hermosas de la década.',
-        },
-      },
-      {
-        texto: 'Asegurar sin arriesgar a besarte la pared',
-        consecuencias: {
-          stats: { consistencia: 8, gestion: 5 },
-          textoResultado: 'Asegurás el 2do lugar en primera fila. Gran posición para la carrera.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'f1-05-decisión-etica-campeonato',
-    tipo: 'deportivo',
-    categoriaMinima: 'Fórmula 1',
-    categoriaMaxima: 'Fórmula 1',
-    peso: 18,
-    titulo: 'Maniobra en la chicana con el candidato al título',
-    descripcion: 'Pelea directa de carrera. Tu rival directo en el mundial te mete el auto por dentro. Si no cortás la chicana chocan ambos.',
-    opciones: [
-      {
-        texto: 'Mantener la línea y apretar el choque (si quedamos afuera los dos, sigo arriba)',
-        consecuencias: {
-          stats: { defensa: 8, popularidad: -12 },
-          incrementaJuegoSucio: true,
-          textoResultado: 'Choque espectacular. Ambos fuera de carrera. Mantuviste la ventaja de puntos pero bajo abucheos.',
-        },
-      },
-      {
-        texto: 'Esquivar por la escapatoria sacrificando la posición',
-        consecuencias: {
-          stats: { popularidad: 12, consistencia: 5 },
-          textoResultado: 'Mantenés el auto sano. Perdiste la punta hoy pero la caballerosidad deportiva te enaltece.',
         },
       },
     ],
@@ -556,7 +409,7 @@ export const EVENTOS: Evento[] = [
         texto: 'Manejar como un poseso sin soltar el acelerador en el Curvón',
         consecuencias: {
           stats: { velocidad: 12, lluvia: 12, fama: 18 },
-          textoResultado: '¡CRUZÁS LA META EN PRIMER LUGAR! El grito sagrado recorre el mundo.',
+          textoResultado: '¡Actuación legendaria en agua! Cierras el campeonato con los aplausos del mundo entero.',
         },
       },
       {
