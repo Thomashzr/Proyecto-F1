@@ -176,3 +176,29 @@ export interface OpcionEntrenamiento {
   descripcion: string;
   incremento: number;
 }
+
+export type TipoMinijuego = 'adelantamiento' | 'estrategia-boxes' | 'eleccion-neumaticos';
+
+export interface OpcionMinijuego {
+  id: string;
+  texto: string;
+  descripcion: string;
+  esOptimo: boolean;
+}
+
+export interface ContextoMinijuego {
+  tipo: TipoMinijuego;
+  titulo: string;
+  descripcion: string;
+  objetivo: 'victoria' | 'podio' | 'puntos';
+  opciones: OpcionMinijuego[];
+  habilidadRecompensada: 'ataque' | 'gestion' | 'consistencia';
+}
+
+export interface ResultadoMinijuego {
+  exito: boolean;
+  objetivo: 'victoria' | 'podio' | 'puntos';
+  bonoModificadorScore: number;
+  statBonus?: { stat: StatKey; cantidad: number };
+  mensaje: string;
+}

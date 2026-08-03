@@ -10,6 +10,89 @@
 
 ---
 
+## [2026-08-03] Implementación Completa de Prompt 9 — Re-corrección Estricta, Auditoría de Ascensos y Sistema de Minijuegos en Carreras Clave (VERSIÓN ALPHA v0.8.0)
+
+### 1. Resumen de Implementaciones y Evidencia Verificable (Reglas de Proceso 1 & 2)
+
+#### Parte A: Correcciones Estructurales de Bugs (A.1 - A.4)
+
+1. **Recurrencia de Entrenamiento Anual (A.1)**
+   - **Diagnóstico**: `elegirOfertaEquipo` en [useGameStore.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/store/useGameStore.ts) navegaba directamente a `pantallaActual: 'juego'`, salteándose el entrenamiento en temporadas con ofertas de equipo.
+   - **Solución**: Se actualizó `elegirOfertaEquipo` para generar `opcionesEntrenamiento` y fijar `pantallaActual: 'entrenamiento'`, asegurando que la pantalla de entrenamiento se dispare al inicio del 100% de las temporadas.
+   - **Evidencia**: Test automatizado en [engine.test.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/tests/engine.test.ts#L196-L247) confirma que la pantalla de entrenamiento se ejecuta en 10/10 temporadas consecutivas.
+
+2. **Auditoría de Transiciones de Categoría e Imposibilidad de Rechazo en FRECA (A.2)**
+   - **Auditoría**: Se relevaron las 10 categorías del juego (Karting Regional $\rightarrow$ Karting Nacional $\rightarrow$ Fórmula Nacional $\rightarrow$ Fórmula 4 Brasil $\rightarrow$ Fórmula 4 España $\rightarrow$ Fórmula 4 Italia $\rightarrow$ Formula Regional Europea $\rightarrow$ FIA Fórmula 3 $\rightarrow$ FIA Fórmula 2 $\rightarrow$ Fórmula 1).
+   - **Fix de Rechazo**: En [eventos.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/data/eventos.ts), los eventos de oferta a mitad de temporada (`f4-06-oferta-freca` y `karting-05-salto-nacional`) incorporaron una segunda opción de **Rechazar / Continuidad**, eliminando el ascenso forzado sin consentimiento.
+
+3. **Sincronización Inmediata de Categoría en la UI Post-Ascenso (A.3)**
+   - **Diagnóstico**: `resolverFinDeTemporada` mutaba prematuramente `state.categoria = nuevaCategoria` antes de que el jugador eligiera oferta, provocando discrepancias en el HUD de la UI.
+   - **Solución**: `resolverFinDeTemporada` retiene `state.categoria` intacta y sólo genera `ofertasPendientes`. La mutación síncrona de `categoria` ocurre únicamente cuando el usuario ejecuta `elegirOfertaEquipo`.
+   - **Evidencia**: Test automatizado en [engine.test.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/tests/engine.test.ts#L249-L311) confirma sincronización inmediata al aceptar y permanencia al rechazar.
+
+4. **Superlicencia F1 — Exclusividad y Exclusión en F1 (A.4)**
+   - **Fix**: Evento `f2-superlicencia-f1` en [eventos.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/data/eventos.ts) marcado como `esUnico: true` y condicionado en `esEventoElegible` ([gameEngine.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/engine/gameEngine.ts)) para descartarse automáticamente si el piloto ya pertenece a `Fórmula 1`.
+   - **Evidencia**: Test automatizado en [engine.test.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/tests/engine.test.ts#L313-L340) valida no elegibilidad en F1 e imposibilidad de repetición.
+
+#### Parte B: Sistema de Minijuegos en Carreras Clave (B.1 - B.7)
+
+1. **Motor de Minijuegos (`src/engine/minijuegos.ts`)**:
+   - Soporta 3 minijuegos interactivos: **Adelantamiento** (Ataque), **Estrategia de Boxes** (Gestión) y **Elección de Neumáticos** (Consistencia).
+   - **Probabilidad de Aparición**: 50% en fechas clave (`esCarreraClave: true`).
+   - **Resolución Probabilística**: Opción óptima otorga 80% de éxito; opción no óptima 30%.
+   - **Efectos Reales**: El éxito concede +20 de bono modificador al score simulado de carrera (+4 puestos promedio en grilla final) y +1 punto a la habilidad correspondientes. El fallo otorga +0 bono sin restar estadísticas ni penalizaciones.
+2. **Interfaz de Usuario y Modales**:
+   - Nuevo componente interactivo [ScreenMinijuego.tsx](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/components/ScreenMinijuego.tsx) con animaciones Framer Motion y estética de telemetría F1.
+3. **Integración con Motor y Store**:
+   - `simularFechaCarrera` y `simularCarrerasRestantes` en [gameEngine.ts](file:///home/thomi/M%C3%BAsica/Proyecto%20F1/src/engine/gameEngine.ts) aceptan el modificador de score acumulado en la temporada.
+
+---
+
+### 2. Resultados de Simulación de 1.000 Partidas (Prompt 9 - ALPHA v0.8.0)
+
+```text
+================ RESULTADOS DE SIMULACIÓN PROMPT 9 (ALPHA v0.8.0) ================
+Partidas jugadas: 1000
+Partidas inconclusas (loops): 0 (0%)
+Promedio de eventos por partida: 75.62
+Promedio de temporadas por partida: 28.91
+Edad promedio de retiro: 36.9 años
+% Eventos repetidos vs temporada anterior: 53.70%
+Diversidad de arquetipos finales generados: 5 arquetipos distintos
+
+Métricas de Minijuegos en Carreras Clave:
+  - Total minijuegos generados: 25,720
+  - Minijuegos ganados (éxito): 20,567 (79.97%)
+  - Minijuegos no concretados (fallo sin penalización): 5,153 (20.03%)
+
+Distribución de Arquetipos Finales:
+  - campeon-invicto-f1:          858 (85.8%)
+  - el-fiel-escudero:             53 (5.3%)
+  - campeon-implacable-polemico:  47 (4.7%)
+  - el-rey-del-agua:              29 (2.9%)
+  - el-rey-sin-corona:            13 (1.3%)
+===================================================================================
+```
+
+---
+
+### Tabla de Auditoría de Transiciones entre las 10 Categorías
+
+| Ord | Categoría Origen | Categoría Destino | Criterio de Generación de Oferta | Evento de Oferta Mid-Season |
+|:---|:---|:---|:---|:---|
+| 1 | Karting Regional | Karting Nacional | OVR $\ge 50$ o Posición Final $\le 5$ | `karting-05-salto-nacional` (Con opción de rechazar) |
+| 2 | Karting Nacional | Fórmula Nacional | OVR $\ge 50$ o Posición Final $\le 5$ | - |
+| 3 | Fórmula Nacional | Fórmula 4 Brasil | OVR $\ge 50$ o Posición Final $\le 5$ | - |
+| 4 | Fórmula 4 Brasil | Fórmula 4 España | OVR $\ge 50$ o Posición Final $\le 5$ | - |
+| 5 | Fórmula 4 España | Fórmula 4 Italia | OVR $\ge 50$ o Posición Final $\le 5$ | `f4-06-oferta-freca` (Con opción de rechazar) |
+| 6 | Fórmula 4 Italia | Formula Regional Europea | OVR $\ge 50$ o Posición Final $\le 5$ | - |
+| 7 | Formula Regional Europea | FIA Fórmula 3 | OVR $\ge 50$ o Posición Final $\le 5$ | - |
+| 8 | FIA Fórmula 3 | FIA Fórmula 2 | OVR $\ge 50$ o Posición Final $\le 5$ | - |
+| 9 | FIA Fórmula 2 | Fórmula 1 | OVR $\ge 50$ o Posición Final $\le 5$ | `f2-superlicencia-f1` (Superlicencia requerida) |
+| 10 | Fórmula 1 | - | Categoría Máxima | - |
+
+---
+
 ## [2026-08-02] Implementación Completa de Prompt 8 — Renombre a Pistero, Ajuste de Scope y Re-corrección Estricta de Bugs (VERSIÓN ALPHA v0.7.0)
 
 ### 1. Resumen de Implementaciones y Evidencia Verificable (Regla 2)
@@ -120,8 +203,8 @@ Distribución de Arquetipos Finales:
 ---
 
 ## Estado Actual del Proyecto
-- **Versión**: ALPHA v0.6.0 (Prompt 7 completado y validado)
+- **Versión**: ALPHA v0.8.0 (Prompt 9 completado y validado)
 - **Compilación / Pruebas**:
-  - `pnpm test` $\rightarrow$ 6/6 pruebas pasadas al 100%.
+  - `pnpm test` $\rightarrow$ 18/18 pruebas pasadas al 100% (engine, simulation, minijuegos).
   - `pnpm typecheck` $\rightarrow$ 0 errores de compilación (`strict: true`).
-  - `pnpm build` $\rightarrow$ Build de producción generado en 3.57s.
+  - `pnpm build` $\rightarrow$ Build de producción generado en 2.64s.

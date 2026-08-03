@@ -126,6 +126,13 @@ export const EVENTOS: Evento[] = [
           textoResultado: '¡Ascendés a Karting Nacional! Los circuitos son más exigentes y la competencia es implacable.',
         },
       },
+      {
+        texto: 'Rechazar el ascenso y continuar en Karting Regional',
+        consecuencias: {
+          stats: { consistencia: 4 },
+          textoResultado: 'Rechazaste el ascenso para buscar el título en Karting Regional.',
+        },
+      },
     ],
   },
   {
@@ -281,6 +288,13 @@ export const EVENTOS: Evento[] = [
           textoResultado: 'Confirmás tu contrato en FRECA. Estás en la antesala real de la Fórmula 3.',
         },
       },
+      {
+        texto: 'Rechazar la oferta y continuar en tu escudería actual de Fórmula 4',
+        consecuencias: {
+          stats: { consistencia: 5 },
+          textoResultado: 'Rechazaste la oferta de FRECA para continuar ganando experiencia en Fórmula 4.',
+        },
+      },
     ],
   },
 
@@ -334,6 +348,27 @@ export const EVENTOS: Evento[] = [
         consecuencias: {
           stats: { popularidad: -8, fama: 5 },
           textoResultado: 'Un escándalo en los boxes. La relación con los ingenieros quedó sumamente tirante.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'f2-superlicencia-f1',
+    tipo: 'extradeportivo',
+    categoriaMinima: 'FIA Fórmula 3',
+    categoriaMaxima: 'FIA Fórmula 2',
+    condiciones: [{ stat: 'velocidad', operador: '>=', valor: 65 }],
+    peso: 35,
+    esUnico: true,
+    titulo: 'Puntos de Superlicencia FIA Completados',
+    descripcion: 'Alcanzás los 40 puntos necesarios de Superlicencia de la FIA. Las escuderías de Fórmula 1 ahora pueden ofrecerte asiento titular.',
+    opciones: [
+      {
+        texto: 'Celebrar el logro e informar a la prensa que estás listo para la F1',
+        consecuencias: {
+          stats: { fama: 15, popularidad: 10 },
+          tagHistorial: 'superlicenciaObtenida',
+          textoResultado: '¡Hito fundamental! Tu representante recibe llamadas inmediatas del paddock de F1.',
         },
       },
     ],

@@ -142,6 +142,10 @@ export function esEventoElegible(
     return false;
   }
 
+  if (evento.id.includes('superlicencia') && state.categoria === 'Fórmula 1') {
+    return false;
+  }
+
   if (state.eventosUsadosTemporadaActual.includes(evento.id)) {
     return false;
   }
@@ -404,7 +408,8 @@ export function aplicarDecliveEdad(state: PlayerState): PlayerStats {
 
 export function simularFechaCarrera(
   state: PlayerState,
-  fecha: FechaCalendario
+  fecha: FechaCalendario,
+  modificadorScore = 0
 ): ResultadoFecha {
   const ovr = calcularMediaGeneral(state.stats);
   const rngSeed = `${state.seed}_f_${state.temporada}_${fecha.numeroFecha}`;
@@ -416,7 +421,7 @@ export function simularFechaCarrera(
   }
 
   const ruido = (getRandom() - 0.5) * 20;
-  let score = ponderacionEfectiva + ruido;
+  let score = ponderacionEfectiva + ruido + modificadorScore;
   let posicion = Math.max(1, Math.min(20, Math.round(21 - score / 5)));
 
   const pole = posicion === 1 && getRandom() > 0.4;
@@ -443,10 +448,13 @@ export function simularFechaCarrera(
   };
 }
 
-export function simularCarrerasRestantes(state: PlayerState): ResumenCampeonato {
+export function simularCarrerasRestantes(
+  state: PlayerState,
+  modificadoresMinijuegos: Record<number, number> = {}
+): ResumenCampeonato {
   const calendario = CALENDARIOS_POR_CATEGORIA[state.categoria] || CALENDARIOS_POR_CATEGORIA['Karting Regional'];
   const fechasResultados: ResultadoFecha[] = calendario.map((fecha) =>
-    simularFechaCarrera(state, fecha)
+    simularFechaCarrera(state, fecha, modificadoresMinijuegos[fecha.numeroFecha] || 0)
   );
 
   const victorias = fechasResultados.filter((f) => f.posicion === 1).length;
@@ -476,8 +484,11 @@ export function simularCarrerasRestantes(state: PlayerState): ResumenCampeonato 
   };
 }
 
-export function resolverFinDeTemporada(state: PlayerState): PlayerState {
-  const resumenAño = simularCarrerasRestantes(state);
+export function resolverFinDeTemporada(
+  state: PlayerState,
+  modificadoresMinijuegos: Record<number, number> = {}
+): PlayerState {
+  const resumenAño = simularCarrerasRestantes(state, modificadoresMinijuegos);
   const ovr = calcularMediaGeneral(state.stats);
 
   const nuevasStats = aplicarDecliveEdad(state);
@@ -505,7 +516,7 @@ export function resolverFinDeTemporada(state: PlayerState): PlayerState {
   return {
     ...state,
     stats: nuevasStats,
-    categoria: nuevaCategoria,
+    categoria: state.categoria,
     temporada: state.temporada + 1,
     edad: nuevaEdad,
     eventosUsadosTemporadaActual: [],

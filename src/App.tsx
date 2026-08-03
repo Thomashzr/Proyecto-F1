@@ -4,11 +4,17 @@ import { ScreenInicio } from './pages/ScreenInicio';
 import { ScreenEntrenamiento } from './pages/ScreenEntrenamiento';
 import { ScreenOfertasEquipos } from './pages/ScreenOfertasEquipos';
 import { ScreenJuego } from './pages/ScreenJuego';
+import { ScreenMinijuego } from './components/ScreenMinijuego';
 import { ScreenResumenTemporada } from './pages/ScreenResumenTemporada';
 import { ScreenResultado } from './pages/ScreenResultado';
 
 export const App: React.FC = () => {
-  const { pantallaActual } = useGameStore();
+  const {
+    pantallaActual,
+    minijuegoActual,
+    responderMinijuego,
+    continuarDesdeMinijuego,
+  } = useGameStore();
 
   switch (pantallaActual) {
     case 'inicio':
@@ -17,6 +23,15 @@ export const App: React.FC = () => {
       return <ScreenEntrenamiento />;
     case 'ofertasEquipos':
       return <ScreenOfertasEquipos />;
+    case 'minijuego':
+      if (!minijuegoActual) return <ScreenJuego />;
+      return (
+        <ScreenMinijuego
+          minijuego={minijuegoActual}
+          onResponder={responderMinijuego}
+          onContinuar={continuarDesdeMinijuego}
+        />
+      );
     case 'juego':
       return <ScreenJuego />;
     case 'resumenTemporada':

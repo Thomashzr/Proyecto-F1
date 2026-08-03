@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { PlayerState, PlayerStats, Evento, Final, StatKey, OpcionEntrenamiento, OfertaEquipo } from '../engine/types';
+import { PlayerState, PlayerStats, Evento, Final, StatKey, OpcionEntrenamiento, OfertaEquipo, ContextoMinijuego, ResultadoMinijuego } from '../engine/types';
 import {
   createInitialState,
   seleccionarEvento,
@@ -10,6 +10,8 @@ import {
   interpolarTexto,
   cantidadCarrerasClave,
 } from '../engine/gameEngine';
+import { generarMinijuegoParaCarrera, resolverMinijuego } from '../engine/minijuegos';
+import { CALENDARIOS_POR_CATEGORIA } from '../data/calendarios';
 import { EVENTOS } from '../data/eventos';
 import { FINALES } from '../data/finales';
 
@@ -17,13 +19,16 @@ interface GameStore {
   playerState: PlayerState | null;
   eventoActual: Evento | null;
   finalActual: Final | null;
+  minijuegoActual: ContextoMinijuego | null;
+  resultadoMinijuegoActual: ResultadoMinijuego | null;
+  modificadoresMinijuegosTemporada: Record<number, number>;
   feedbackResultado: {
     textoResultado: string;
     statsDeltas: Partial<PlayerStats>;
     opcionTexto: string;
   } | null;
   opcionesEntrenamiento: OpcionEntrenamiento[];
-  pantallaActual: 'inicio' | 'entrenamiento' | 'juego' | 'ofertasEquipos' | 'resumenTemporada' | 'resultado';
+  pantallaActual: 'inicio' | 'entrenamiento' | 'juego' | 'minijuego' | 'ofertasEquipos' | 'resumenTemporada' | 'resultado';
   temporadaResumenMostrada: number;
 
   // Acciones
@@ -31,6 +36,8 @@ interface GameStore {
   elegirEntrenamiento: (habilidadKey: StatKey) => void;
   elegirOfertaEquipo: (oferta: OfertaEquipo) => void;
   elegirOpcion: (opcionIndex: number) => void;
+  responderMinijuego: (opcionIndex: number) => ResultadoMinijuego;
+  continuarDesdeMinijuego: () => void;
   continuarSiguienteEvento: () => void;
   avanzarDesdeResumenTemporada: () => void;
   solicitarRetiroVoluntario: () => void;
@@ -41,6 +48,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerState: null,
   eventoActual: null,
   finalActual: null,
+  minijuegoActual: null,
+  resultadoMinijuegoActual: null,
+  modificadoresMinijuegosTemporada: {},
   feedbackResultado: null,
   opcionesEntrenamiento: [],
   pantallaActual: 'inicio',
@@ -58,6 +68,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       eventoActual: null,
       finalActual: null,
       feedbackResultado: null,
+      minijuegoActual: null,
+      resultadoMinijuegoActual: null,
+      modificadoresMinijuegosTemporada: {},
     });
   },
 
@@ -76,6 +89,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const primerEvento = seleccionarEvento(EVENTOS, estadoEntrenado);
+    const calendario = CALENDARIOS_POR_CATEGORIA[estadoEntrenado.categoria] || [];
+    const fechaActual = calendario[estadoEntrenado.eventosUsadosTemporadaActual.length];
+    const minijuegoGen = fechaActual ? generarMinijuegoParaCarrera(estadoEntrenado, fechaActual) : null;
+
+    if (minijuegoGen) {
+      set({
+        playerState: estadoEntrenado,
+        eventoActual: primerEvento,
+        minijuegoActual: minijuegoGen,
+        pantallaActual: 'minijuego',
+      });
+      return;
+    }
 
     set({
       playerState: estadoEntrenado,
@@ -95,11 +121,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ofertasPendientes: [],
     };
 
-    const primerEvento = seleccionarEvento(EVENTOS, nuevoEstado);
+    const opcionesEnt = obtenerOpcionesEntrenamiento(nuevoEstado);
 
     set({
       playerState: nuevoEstado,
-      eventoActual: primerEvento,
+      opcionesEntrenamiento: opcionesEnt,
+      pantallaActual: 'entrenamiento',
+    });
+  },
+
+  responderMinijuego: (opcionIndex: number) => {
+    const { minijuegoActual, playerState, modificadoresMinijuegosTemporada } = get();
+    if (!minijuegoActual || !playerState) {
+      throw new Error('No hay minijuego activo para responder');
+    }
+
+    const { resultado, nuevoEstado } = resolverMinijuego(minijuegoActual, opcionIndex, playerState);
+    const calendario = CALENDARIOS_POR_CATEGORIA[playerState.categoria] || [];
+    const fechaActual = calendario[playerState.eventosUsadosTemporadaActual.length];
+    const numFecha = fechaActual ? fechaActual.numeroFecha : 1;
+
+    const nuevosModificadores = {
+      ...modificadoresMinijuegosTemporada,
+      [numFecha]: resultado.bonoModificadorScore,
+    };
+
+    set({
+      playerState: nuevoEstado,
+      resultadoMinijuegoActual: resultado,
+      modificadoresMinijuegosTemporada: nuevosModificadores,
+    });
+
+    return resultado;
+  },
+
+  continuarDesdeMinijuego: () => {
+    const { playerState } = get();
+    if (!playerState) return;
+
+    const siguienteEvento = seleccionarEvento(EVENTOS, playerState);
+    set({
+      eventoActual: siguienteEvento,
+      minijuegoActual: null,
+      resultadoMinijuegoActual: null,
       pantallaActual: 'juego',
     });
   },
@@ -168,6 +232,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
+    const calendario = CALENDARIOS_POR_CATEGORIA[playerState.categoria] || [];
+    const fechaActual = calendario[playerState.eventosUsadosTemporadaActual.length];
+    const minijuegoGen = fechaActual ? generarMinijuegoParaCarrera(playerState, fechaActual) : null;
+
+    if (minijuegoGen) {
+      set({
+        eventoActual: siguienteEvento,
+        minijuegoActual: minijuegoGen,
+        feedbackResultado: null,
+        pantallaActual: 'minijuego',
+      });
+      return;
+    }
+
     set({
       eventoActual: siguienteEvento,
       feedbackResultado: null,
@@ -192,6 +270,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const opcionesEnt = obtenerOpcionesEntrenamiento(playerState);
     set({
       opcionesEntrenamiento: opcionesEnt,
+      modificadoresMinijuegosTemporada: {},
       pantallaActual: 'entrenamiento',
     });
   },

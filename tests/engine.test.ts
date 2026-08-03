@@ -130,21 +130,32 @@ describe('Reglas de Negocio - Eventos por Temporada (Sección 4)', () => {
       const catActual = state.categoria;
       const expectedCount = cantidadCarrerasClave(catActual);
 
-      if (useGameStore.getState().pantallaActual === 'entrenamiento') {
-        const op = useGameStore.getState().opcionesEntrenamiento[0];
-        store.elegirEntrenamiento(op.habilidad);
-      }
-
       if (useGameStore.getState().pantallaActual === 'ofertasEquipos') {
         const of = useGameStore.getState().playerState!.ofertasPendientes[0];
         store.elegirOfertaEquipo(of);
       }
 
+      if (useGameStore.getState().pantallaActual === 'entrenamiento') {
+        const op = useGameStore.getState().opcionesEntrenamiento[0];
+        store.elegirEntrenamiento(op.habilidad);
+      }
+
+      if (useGameStore.getState().pantallaActual === 'minijuego') {
+        store.responderMinijuego(0);
+        store.continuarDesdeMinijuego();
+      }
+
       let eventosEnEstaTemp = 0;
-      while (useGameStore.getState().pantallaActual === 'juego') {
-        eventosEnEstaTemp++;
-        store.elegirOpcion(0);
-        store.continuarSiguienteEvento();
+      while (useGameStore.getState().pantallaActual === 'juego' || useGameStore.getState().pantallaActual === 'minijuego') {
+        if (useGameStore.getState().pantallaActual === 'minijuego') {
+          store.responderMinijuego(0);
+          store.continuarDesdeMinijuego();
+        }
+        if (useGameStore.getState().pantallaActual === 'juego') {
+          eventosEnEstaTemp++;
+          store.elegirOpcion(0);
+          store.continuarSiguienteEvento();
+        }
       }
 
       expect(eventosEnEstaTemp).toBe(expectedCount);
@@ -177,6 +188,9 @@ describe('Prevención de Loops y Simulación Continua de Jugador Real (Sección 
       if (currentScreen === 'entrenamiento') {
         const op = useGameStore.getState().opcionesEntrenamiento[0];
         store.elegirEntrenamiento(op.habilidad);
+      } else if (currentScreen === 'minijuego') {
+        store.responderMinijuego(0);
+        store.continuarDesdeMinijuego();
       } else if (currentScreen === 'ofertasEquipos') {
         const of = useGameStore.getState().playerState!.ofertasPendientes[0];
         store.elegirOfertaEquipo(of);
@@ -190,5 +204,136 @@ describe('Prevención de Loops y Simulación Continua de Jugador Real (Sección 
 
     expect(temporadasAlcanzadas.size).toBeGreaterThanOrEqual(15);
     expect(pasosContados).toBeLessThan(pasosMaximos);
+  });
+});
+
+describe('Prompt 9 - Parte A: Verificación de Fixes (A.1, A.2, A.3, A.4)', () => {
+  it('A.1: verifica que la pantalla de entrenamiento se dispara al inicio de cada temporada (100% de 10 temporadas)', () => {
+    const store = useGameStore.getState();
+    store.iniciarJuego('Piloto Entrenado', 'Argentina', 'buenos-aires-racing', 'seed_training_10_seasons');
+
+    const temporadasConEntrenamiento = new Set<number>();
+
+    for (let i = 0; i < 200; i++) {
+      const currentScreen = useGameStore.getState().pantallaActual;
+      const state = useGameStore.getState().playerState;
+
+      if (!state || state.finalizado || currentScreen === 'resultado') break;
+
+      if (currentScreen === 'entrenamiento') {
+        temporadasConEntrenamiento.add(state.temporada);
+        const op = useGameStore.getState().opcionesEntrenamiento[0];
+        store.elegirEntrenamiento(op.habilidad);
+      } else if (currentScreen === 'minijuego') {
+        store.responderMinijuego(0);
+        store.continuarDesdeMinijuego();
+      } else if (currentScreen === 'ofertasEquipos') {
+        const of = useGameStore.getState().playerState!.ofertasPendientes[0];
+        store.elegirOfertaEquipo(of);
+      } else if (currentScreen === 'juego') {
+        store.elegirOpcion(0);
+        store.continuarSiguienteEvento();
+      } else if (currentScreen === 'resumenTemporada') {
+        store.avanzarDesdeResumenTemporada();
+      }
+
+      if (temporadasConEntrenamiento.size >= 10) break;
+    }
+
+    // Verificar que exactamente cada temporada de 1 a 10 se registró en entrenamiento
+    for (let t = 1; t <= 10; t++) {
+      expect(temporadasConEntrenamiento.has(t)).toBe(true);
+    }
+  });
+
+  it('A.2 y A.3: verifica sincronización inmediata de la UI de categoría y opción de continuidad/rechazo', () => {
+    const store = useGameStore.getState();
+    store.iniciarJuego('Piloto Ascenso', 'Argentina', 'buenos-aires-racing', 'seed_ascenso_test');
+
+    const state = useGameStore.getState().playerState!;
+    state.ofertasPendientes = [
+      {
+        id: 'continuidad',
+        nombre: 'Escudería F4 Actual',
+        categoria: 'Fórmula 4 España',
+        pais: 'España',
+        nivelRendimiento: 80,
+        expectativas: 'Puntos',
+        prestigioFamaBonus: 5,
+        esContinuidad: true,
+      },
+      {
+        id: 'prema-freca',
+        nombre: 'Prema Racing FRECA',
+        categoria: 'Formula Regional Europea',
+        pais: 'Italia',
+        nivelRendimiento: 90,
+        expectativas: 'Podios',
+        prestigioFamaBonus: 9,
+      },
+    ];
+
+    // 1. Aceptar oferta de FRECA
+    store.elegirOfertaEquipo(state.ofertasPendientes[1]);
+
+    // Verificación A.3: Categoría actualizada inmediatamente e íntegramente
+    const updatedState = useGameStore.getState().playerState!;
+    expect(updatedState.categoria).toBe('Formula Regional Europea');
+    expect(updatedState.equipo).toBe('Prema Racing FRECA');
+    expect(useGameStore.getState().pantallaActual).toBe('entrenamiento');
+
+    // 2. Rechazar (Continuidad) en siguiente temporada
+    updatedState.ofertasPendientes = [
+      {
+        id: 'continuidad',
+        nombre: 'Prema Racing FRECA',
+        categoria: 'Formula Regional Europea',
+        pais: 'Italia',
+        nivelRendimiento: 90,
+        expectativas: 'Podios',
+        prestigioFamaBonus: 9,
+        esContinuidad: true,
+      },
+      {
+        id: 'prema-f3',
+        nombre: 'Prema Racing F3',
+        categoria: 'FIA Fórmula 3',
+        pais: 'Italia',
+        nivelRendimiento: 92,
+        expectativas: 'Título',
+        prestigioFamaBonus: 10,
+      },
+    ];
+
+    store.elegirOfertaEquipo(updatedState.ofertasPendientes[0]); // Rechaza F3 y elige continuidad en FRECA
+    const stateRechazo = useGameStore.getState().playerState!;
+    expect(stateRechazo.categoria).toBe('Formula Regional Europea');
+  });
+
+  it('A.4: verifica que el evento de Superlicencia es único y no vuelve a elegirse si el piloto ya está en F1', () => {
+    const state = createInitialState('Piloto F1', 'Argentina', 'buenos-aires-racing', 'seed_superlic');
+    const eventoSuperlic = {
+      id: 'f2-superlicencia-f1',
+      tipo: 'extradeportivo' as const,
+      categoriaMinima: 'FIA Fórmula 2' as const,
+      categoriaMaxima: 'FIA Fórmula 2' as const,
+      peso: 35,
+      esUnico: true,
+      titulo: 'Test Superlicencia',
+      descripcion: 'Test',
+      opciones: [],
+    };
+
+    state.categoria = 'FIA Fórmula 2';
+    expect(esEventoElegible(eventoSuperlic, state)).toBe(true);
+
+    // Estando en F1, jamás debe ser elegible
+    state.categoria = 'Fórmula 1';
+    expect(esEventoElegible(eventoSuperlic, state)).toBe(false);
+
+    // Si ya se vio (esUnico), tampoco debe ser elegible
+    state.categoria = 'FIA Fórmula 2';
+    state.eventosVistos.push('f2-superlicencia-f1');
+    expect(esEventoElegible(eventoSuperlic, state)).toBe(false);
   });
 });
