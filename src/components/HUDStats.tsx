@@ -1,14 +1,15 @@
 import React from 'react';
-import { PlayerStats, Categoria } from '../engine/types';
+import { PlayerStats, Categoria, SituacionActual } from '../engine/types';
 import { calcularMediaGeneral } from '../engine/gameEngine';
 
 interface HUDStatsProps {
   nombre: string;
   nacionalidad: string;
   edad: number;
-  categoria: Categoria;
+  categoria?: Categoria;
   temporada: number;
-  equipo: string | null;
+  equipo?: string | null;
+  situacionActual?: SituacionActual;
   stats: PlayerStats;
 }
 
@@ -16,11 +17,14 @@ export const HUDStats: React.FC<HUDStatsProps> = ({
   nombre,
   nacionalidad,
   edad,
-  categoria,
+  categoria: propCategoria,
   temporada,
-  equipo,
+  equipo: propEquipo,
+  situacionActual,
   stats,
 }) => {
+  const categoria = situacionActual ? situacionActual.categoria : (propCategoria || 'Karting Regional');
+  const equipo = situacionActual ? situacionActual.equipo : propEquipo;
   const ovr = calcularMediaGeneral(stats);
 
   const getCategoryBadgeColor = (cat: Categoria) => {

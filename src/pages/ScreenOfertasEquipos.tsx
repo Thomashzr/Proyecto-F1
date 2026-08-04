@@ -4,7 +4,7 @@ import { useGameStore } from '../store/useGameStore';
 import { OfertaEquipo } from '../engine/types';
 
 export const ScreenOfertasEquipos: React.FC = () => {
-  const { playerState, elegirOfertaEquipo } = useGameStore();
+  const { playerState, elegirOfertaEquipo, solicitarRetiroVoluntario } = useGameStore();
 
   if (!playerState || playerState.ofertasPendientes.length === 0) return null;
 
@@ -20,17 +20,17 @@ export const ScreenOfertasEquipos: React.FC = () => {
       >
         <div className="border-b border-asfalto-border pb-4">
           <span className="font-mono text-xs text-telemetria uppercase tracking-widest block font-semibold">
-            MERKATO DE FICHAJES • TEMPORADA {playerState.temporada}
+            MERCADO DE CONTRATOS • TEMPORADA {playerState.temporada}
           </span>
           <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white tracking-wide mt-1">
             {esOfertaF1
               ? '🏆 ¡SUPERLICENCIA F1 ALCANZADA! OFERTAS TITULARES'
-              : 'OFERTAS DE ESCUDERÍA RECIBIDAS'}
+              : 'OFERTAS DE ESCUDERÍA Y CONTRATOS'}
           </h1>
           <p className="text-telemetria text-xs sm:text-sm mt-2 font-sans">
             {esOfertaF1
-              ? 'Tus actuaciones te abrieron las puertas de la máxima categoría mundial del deporte motor. Elegí tu escudería de F1 o renová un año más para ganar experiencia.'
-              : `Tus actuaciones despertaron el interés de varias escuderías. Elegí tu destino o mantené la continuidad en tu equipo.`}
+              ? 'Tus actuaciones te abrieron las puertas de la máxima categoría mundial del deporte motor. Elegí tu escudería de F1 o renová tu vínculo para ganar experiencia.'
+              : `Elegí tu contrato para las próximas temporadas o decidí el rumbo de tu carrera.`}
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export const ScreenOfertasEquipos: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="font-display text-lg font-bold text-white group-hover:text-f1red-light uppercase">
                   {oferta.esContinuidad
-                    ? `🔄 PERMANECER EN ${oferta.nombre}`
+                    ? `🔄 RENOVACIÓN CON ${oferta.nombre}`
                     : oferta.nombre}
                 </span>
                 <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded">
@@ -56,12 +56,26 @@ export const ScreenOfertasEquipos: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs font-mono text-telemetria">
-                <span>{oferta.esContinuidad ? 'Renovación de Contrato' : `País: ${oferta.pais}`}</span>
+                <span>
+                  📜 {oferta.duracionContrato || 1} {oferta.duracionContrato === 1 ? 'TEMPORADA' : 'TEMPORADAS'} DE CONTRATO
+                </span>
                 <span className="text-telemetria-gold">Expectativa: {oferta.expectativas}</span>
               </div>
             </button>
           ))}
         </div>
+
+        {/* Retiro Voluntario reubicado a la pantalla de decisiones de contrato (Parte D.1) */}
+        {playerState.edad >= 32 && (
+          <div className="border-t border-asfalto-border pt-4 text-center">
+            <button
+              onClick={solicitarRetiroVoluntario}
+              className="w-full py-3 bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-300 font-display uppercase tracking-wider font-bold text-sm rounded transition-all"
+            >
+              🏁 ANUNCIAR RETIRO VOLUNTARIO DEL AUTOMOVILISMO ({playerState.edad} AÑOS)
+            </button>
+          </div>
+        )}
       </motion.div>
     </div>
   );

@@ -26,22 +26,31 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: 'Rechazaste cheques en blanco de otras escuderías para mantenerte fiel a {EQUIPO}. {PILOTO} no solo corrió para la marca, se convirtió en el símbolo eterno de sus victorias.',
     esExito: true,
     prioridad: 100,
-    evaluar: (state) =>
-      state.categoria === 'Fórmula 1' &&
-      (state.tagsHistorial['lealtadEquipo'] || 0) >= 3 &&
-      state.historialCampeonatos.length >= 5,
+    evaluar: (state) => {
+      const cat = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+      return (
+        cat === 'Fórmula 1' &&
+        (state.tagsHistorial['lealtadEquipo'] || 0) >= 3 &&
+        state.historialCampeonatos.length >= 5
+      );
+    },
   },
   {
     id: 'campeon-invicto-f1',
     tituloPlantilla: 'Campeón Invicto de Fórmula 1',
     subtituloPlantilla: 'Dominio absoluto e inalcanzable en la era dorada de {EQUIPO}.',
-    descripcionPlantilla: '{PILOTO} impuso una tiranía de velocidad en la F1. Ningún rival pudo hacerle sombra y su nombre quedará esculpido entre las deidades del automovilismo.',
+    descripcionPlantilla: '{PILOTO} impuso una tiranía de velocidad en la F1. Ganó el campeonato sin perder una sola carrera en toda la temporada, esculpiendo su nombre entre las deidades del automovilismo.',
     esExito: true,
     prioridad: 95,
-    evaluar: (state) =>
-      state.categoria === 'Fórmula 1' &&
-      state.stats.velocidad >= 75 &&
-      state.stats.consistencia >= 70,
+    evaluar: (state) => {
+      const cat = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+      return (
+        cat === 'Fórmula 1' &&
+        state.historialCampeonatos.some(
+          (c) => c.categoria === 'Fórmula 1' && c.posicionFinal === 1 && c.fechas.length > 0 && c.victorias === c.fechas.length
+        )
+      );
+    },
   },
   {
     id: 'campeon-implacable-polemico',
@@ -50,10 +59,12 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: 'Ganaste el título mundial enfrentándote a comisarios, compañeros y al propio {RIVAL}. {PILOTO} demostró que para llegar a lo más alto a veces hay que cruzar la línea.',
     esExito: true,
     prioridad: 90,
-    evaluar: (state) =>
-      state.categoria === 'Fórmula 1' &&
-      state.juegoSucioCount >= 2 &&
-      state.stats.velocidad >= 65,
+    evaluar: (state) => {
+      const cat = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+      const ganoTitulo = state.historialCampeonatos.some((c) => c.categoria === 'Fórmula 1' && c.posicionFinal === 1);
+      const polemico = state.juegoSucioCount >= 2 || (state.tagsHistorial['escandalosMediaticos'] || 0) >= 2;
+      return cat === 'Fórmula 1' && ganoTitulo && polemico;
+    },
   },
   {
     id: 'el-rebelde-del-paddock',
@@ -62,7 +73,7 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: 'Ignoraste órdenes de equipo y desataste tormentas en los micrófonos. Los patrocinadores temblaban pero los fanáticos adoraban tu personalidad explosiva.',
     esExito: true,
     prioridad: 85,
-    evaluar: (state) => (state.tagsHistorial['escandalosMediaticos'] || 0) >= 2,
+    evaluar: (state) => (state.tagsHistorial['escandalosMediaticos'] || 0) >= 2 || (state.tagsHistorial['ordenesIgnoradas'] || 0) >= 2,
   },
   {
     id: 'el-rey-del-agua',
@@ -71,7 +82,9 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: 'Cuando caía la lluvia en Spa o Interlagos, {PILOTO} flotaba sobre la pista sacando segundos de ventaja por vuelta. Una sensibilidad sobre el agua que pocos igualarán.',
     esExito: true,
     prioridad: 80,
-    evaluar: (state) => state.stats.lluvia >= 75,
+    evaluar: (state) =>
+      state.stats.lluvia >= 75 &&
+      state.historialCampeonatos.some((c) => c.fechas.some((f) => f.esMojado && f.posicion <= 3)),
   },
   {
     id: 'idolo-popular-multitudes',
@@ -80,7 +93,7 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: 'Más allá de los trofeos, {PILOTO} conquistó el corazón de la gente. Las tribunas se vestían con tus colores en cada Gran Premio.',
     esExito: true,
     prioridad: 75,
-    evaluar: (state) => state.stats.popularidad >= 75,
+    evaluar: (state) => state.stats.popularidad >= 75 && state.stats.fama >= 70,
   },
   {
     id: 'el-fiel-escudero',
@@ -89,7 +102,10 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: 'Aceptaste el trabajo sucio en pista, cubriendo las espaldas de tu equipo y aguantando a los perseguidores. Un profesional impecable respetado por todo el box.',
     esExito: true,
     prioridad: 70,
-    evaluar: (state) => (state.tagsHistorial['ordenesAcatadas'] || 0) >= 2,
+    evaluar: (state) => {
+      const cat = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+      return cat === 'Fórmula 1' && (state.tagsHistorial['ordenesAcatadas'] || 0) >= 2;
+    },
   },
   {
     id: 'el-rey-sin-corona',
@@ -98,7 +114,12 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: '{PILOTO} tuvo la velocidad de un campeón del mundo, pero la fortuna le fue esquiva en las definiciones de infarto contra {RIVAL}.',
     esExito: true,
     prioridad: 65,
-    evaluar: (state) => state.categoria === 'Fórmula 1' && state.stats.velocidad >= 60,
+    evaluar: (state) => {
+      const cat = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+      const podioFinalF1 = state.historialCampeonatos.some((c) => c.categoria === 'Fórmula 1' && c.posicionFinal <= 3);
+      const sinTituloF1 = !state.historialCampeonatos.some((c) => c.categoria === 'Fórmula 1' && c.posicionFinal === 1);
+      return cat === 'Fórmula 1' && podioFinalF1 && sinTituloF1;
+    },
   },
   {
     id: 'veterano-38-anos',
@@ -107,16 +128,22 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: 'Corriste desde tu juventud en karting hasta la madurez de los 38 años en F1. Guiaste a las nuevas generaciones y te retiraste con el aplauso de pie del paddock.',
     esExito: true,
     prioridad: 60,
-    evaluar: (state) => state.edad >= 38 && state.categoria === 'Fórmula 1',
+    evaluar: (state) => {
+      const cat = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+      return state.edad >= 38 && cat === 'Fórmula 1';
+    },
   },
   {
     id: 'piloto-consolidado-f1',
     tituloPlantilla: 'Piloto Consolidado de F1',
     subtituloPlantilla: 'Una sólida carrera en la elite del automovilismo mundial.',
-    descripcionPlantilla: 'Competiste años en la máxima categoría con {EQUIPO}, sumando puntos y podios que llenaron de orgullo a tu país.',
+    descripcionPlantilla: '{PILOTO} compitió durante años en la máxima categoría con {EQUIPO}, sumando puntos y podios que llenaron de orgullo a su país.',
     esExito: true,
     prioridad: 50,
-    evaluar: (state) => state.categoria === 'Fórmula 1',
+    evaluar: (state) => {
+      const cat = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+      return cat === 'Fórmula 1';
+    },
   },
   {
     id: 'estancado-inferiores-zonal',
@@ -125,7 +152,10 @@ export const ARQUETIPOS_FINALES: ArquetipoFinal[] = [
     descripcionPlantilla: 'El salto a la F1 no llegó, pero {PILOTO} se convirtió en un referente indiscutido en los circuitos zonales con peleas memorables contra {RIVAL}.',
     esExito: false,
     prioridad: 40,
-    evaluar: (state) => state.categoria !== 'Fórmula 1',
+    evaluar: (state) => {
+      const cat = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+      return cat !== 'Fórmula 1';
+    },
   },
   {
     id: 'retiro-paz-personal',

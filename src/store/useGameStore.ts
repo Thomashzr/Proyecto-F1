@@ -9,6 +9,8 @@ import {
   evaluarFinales,
   interpolarTexto,
   cantidadCarrerasClave,
+  crearSituacionActual,
+  calcularMediaGeneral,
 } from '../engine/gameEngine';
 import { generarMinijuegoParaCarrera, resolverMinijuego } from '../engine/minijuegos';
 import { CALENDARIOS_POR_CATEGORIA } from '../data/calendarios';
@@ -114,10 +116,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { playerState } = get();
     if (!playerState) return;
 
+    const ovr = calcularMediaGeneral(playerState.stats);
+    const nuevaSituacion = crearSituacionActual(
+      oferta.categoria,
+      oferta.nombre,
+      playerState.temporada,
+      playerState.edad,
+      ovr,
+      oferta.duracionContrato
+    );
+
     const nuevoEstado: PlayerState = {
       ...playerState,
-      equipo: oferta.nombre,
-      categoria: oferta.categoria,
+      situacionActual: nuevaSituacion,
+      equipo: nuevaSituacion.equipo,
+      categoria: nuevaSituacion.categoria,
       ofertasPendientes: [],
     };
 

@@ -23,9 +23,8 @@ export const ScreenJuego: React.FC = () => {
         nombre={playerState.nombre}
         nacionalidad={playerState.nacionalidad}
         edad={playerState.edad}
-        categoria={playerState.categoria}
+        situacionActual={playerState.situacionActual}
         temporada={playerState.temporada}
-        equipo={playerState.equipo}
         stats={playerState.stats}
       />
 

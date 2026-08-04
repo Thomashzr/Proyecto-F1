@@ -70,7 +70,23 @@ export interface ResultadoFecha {
   vueltaRapida: boolean;
   abandono: boolean;
   esCarreraClave: boolean;
+  esMojado?: boolean;
   puntos: number;
+}
+
+export interface Contrato {
+  equipo: string;
+  categoria: Categoria;
+  temporadaInicio: number;
+  duracionTotal: number;
+  duracionRestante: number;
+  temporadaVencimiento: number;
+}
+
+export interface SituacionActual {
+  categoria: Categoria;
+  equipo: string;
+  contrato: Contrato;
 }
 
 export interface OfertaEquipo {
@@ -82,6 +98,7 @@ export interface OfertaEquipo {
   expectativas: string;
   prestigioFamaBonus: number;
   esContinuidad?: boolean;
+  duracionContrato?: number;
 }
 
 export interface ResumenCampeonato {
@@ -105,6 +122,7 @@ export interface PlayerState {
   rivalNombre: string;
   edad: number;
   temporada: number;
+  situacionActual: SituacionActual;
   categoria: Categoria;
   equipo: string | null;
   equipoKartingId?: string;
@@ -121,6 +139,7 @@ export interface PlayerState {
   campeonatoActualFechas: ResultadoFecha[];
   ofertasPendientes: OfertaEquipo[];
   tagsHistorial: Record<string, number>;
+  superlicenciaObtenida?: boolean;
 }
 
 export interface Condicion {

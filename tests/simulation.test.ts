@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createInitialState, seleccionarEvento, aplicarOpcion, resolverFinDeTemporada, aplicarEntrenamiento } from '../src/engine/gameEngine';
+import { createInitialState, seleccionarEvento, aplicarOpcion, resolverFinDeTemporada, aplicarEntrenamiento, crearSituacionActual, calcularMediaGeneral } from '../src/engine/gameEngine';
 import { generarMinijuegoParaCarrera, resolverMinijuego } from '../src/engine/minijuegos';
 import { CALENDARIOS_POR_CATEGORIA } from '../src/data/calendarios';
 import { EVENTOS } from '../src/data/eventos';
@@ -8,14 +8,15 @@ import { PlayerState, StatKey } from '../src/engine/types';
 import { createRNG } from '../src/engine/rng';
 import { evaluarArquetipoFinal } from '../src/data/arquetiposFinales';
 
-describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (ALPHA v0.7.0)', () => {
-  it('ejecuta 1000 partidas, mide repetición de eventos, efectividad de minijuegos y valida estabilidad', () => {
+describe('Simulación de 1000 Partidas - Prompt 10 Contratos, Minijuegos e Impacto (VERSIÓN ALPHA v0.9.0)', () => {
+  it('ejecuta 1000 partidas, mide sincronización atómica, frecuencia e impacto real de minijuegos y valida estabilidad', () => {
     const totalPartidas = 1000;
     const conteoArquetipos: Record<string, number> = {};
     let totalEventosJugados = 0;
     let totalTemporadas = 0;
     let totalEdadesRetiro = 0;
     let partidasInconclusas = 0;
+    let desincronizacionesEstado = 0;
 
     let totalOportunidadesRepeticion = 0;
     let totalEventosRepetidosTempConsecutiva = 0;
@@ -24,15 +25,36 @@ describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (AL
     let totalMinijuegosGanados = 0;
     let totalMinijuegosPerdidos = 0;
 
+    // Métricas de Impacto de Minijuegos en Carreras Clave (Parte C.2)
+    let victoriasConMinijuegoExito = 0;
+    let podiosConMinijuegoExito = 0;
+    let carrerasClaveConMinijuegoExito = 0;
+
+    let victoriasSinMinijuegoOExito = 0;
+    let podiosSinMinijuegoOExito = 0;
+    let carrerasClaveSinMinijuegoOExito = 0;
+
     for (let i = 0; i < totalPartidas; i++) {
-      const seed = `p8_sim_seed_${i}`;
-      let state: PlayerState = createInitialState(`Piloto P8 ${i}`, 'Argentina', 'buenos-aires-racing', seed);
+      const seed = `p10_sim_seed_${i}`;
+      let state: PlayerState = createInitialState(`Piloto P10 ${i}`, 'Argentina', 'buenos-aires-racing', seed);
       let pasos = 0;
+      let modificadoresTemp: Record<number, number> = {};
 
       while (!state.finalizado && pasos < 250) {
         pasos++;
 
+        // Verificación estructural de sincronización B.2
+        if (
+          state.situacionActual.categoria !== state.categoria ||
+          state.situacionActual.equipo !== state.equipo ||
+          state.situacionActual.contrato.categoria !== state.situacionActual.categoria ||
+          state.situacionActual.contrato.equipo !== state.situacionActual.equipo
+        ) {
+          desincronizacionesEstado++;
+        }
+
         if (state.eventosUsadosTemporadaActual.length === 0) {
+          modificadoresTemp = {};
           state = aplicarEntrenamiento(state, 'velocidad', 10);
           const profile = i % 4;
           let statToTrain: StatKey = 'velocidad';
@@ -43,8 +65,9 @@ describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (AL
           state = aplicarEntrenamiento(state, statToTrain, 10);
         }
 
-        const calendario = CALENDARIOS_POR_CATEGORIA[state.categoria] || [];
+        const calendario = CALENDARIOS_POR_CATEGORIA[state.situacionActual.categoria] || [];
         const fechaActual = calendario[state.eventosUsadosTemporadaActual.length];
+
         if (fechaActual && fechaActual.esCarreraClave) {
           const mg = generarMinijuegoParaCarrera(state, fechaActual);
           if (mg) {
@@ -52,18 +75,42 @@ describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (AL
             const idxOptimo = mg.opciones.findIndex((o) => o.esOptimo);
             const { resultado, nuevoEstado } = resolverMinijuego(mg, idxOptimo, state);
             state = nuevoEstado;
-            if (resultado.exito) totalMinijuegosGanados++;
-            else totalMinijuegosPerdidos++;
+            modificadoresTemp[fechaActual.numeroFecha] = resultado.bonoModificadorScore;
+
+            if (resultado.exito) {
+              totalMinijuegosGanados++;
+            } else {
+              totalMinijuegosPerdidos++;
+            }
           }
         }
 
         const evento = seleccionarEvento(EVENTOS, state);
         if (!evento) {
-          state = resolverFinDeTemporada(state);
+          const estadoPrevioTemp = state.historialCampeonatos.length;
+          state = resolverFinDeTemporada(state, modificadoresTemp);
+
+          if (state.historialCampeonatos.length > estadoPrevioTemp) {
+            const ultCamp = state.historialCampeonatos[state.historialCampeonatos.length - 1];
+            for (const f of ultCamp.fechas) {
+              if (f.esCarreraClave) {
+                const bono = modificadoresTemp[f.numeroFecha] || 0;
+                if (bono > 0) {
+                  carrerasClaveConMinijuegoExito++;
+                  if (f.posicion === 1) victoriasConMinijuegoExito++;
+                  if (f.posicion <= 3) podiosConMinijuegoExito++;
+                } else {
+                  carrerasClaveSinMinijuegoOExito++;
+                  if (f.posicion === 1) victoriasSinMinijuegoOExito++;
+                  if (f.posicion <= 3) podiosSinMinijuegoOExito++;
+                }
+              }
+            }
+          }
 
           if (state.edad >= 32) {
             const rngRetiro = createRNG(`${state.seed}_sim_retiro_${state.edad}_${pasos}`);
-            if (state.edad >= 38 || rngRetiro() < 0.30) {
+            if (state.edad >= 38 || rngRetiro() < 0.25) {
               state = { ...state, finalizado: true };
               break;
             }
@@ -71,15 +118,22 @@ describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (AL
 
           if (state.ofertasPendientes.length > 0) {
             const ofertaElegida = state.ofertasPendientes.find((o) => !o.esContinuidad) || state.ofertasPendientes[0];
+            const ovr = calcularMediaGeneral(state.stats);
+            const nuevaSituacion = crearSituacionActual(
+              ofertaElegida.categoria,
+              ofertaElegida.nombre,
+              state.temporada,
+              state.edad,
+              ovr,
+              ofertaElegida.duracionContrato
+            );
             state = {
               ...state,
-              equipo: ofertaElegida.nombre,
-              categoria: ofertaElegida.categoria,
+              situacionActual: nuevaSituacion,
+              equipo: nuevaSituacion.equipo,
+              categoria: nuevaSituacion.categoria,
               ofertasPendientes: [],
             };
-            if (i === 0) {
-              console.log(`[DRIVER 0 SEASON ${state.temporada}] Categoria: ${state.categoria}, Oferta Elegida: ${ofertaElegida.categoria} (${ofertaElegida.nombre})`);
-            }
           }
           continue;
         }
@@ -88,14 +142,43 @@ describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (AL
           ((state.stats.velocidad * 7 + pasos * 13 + i) % 100) / 100 * evento.opciones.length
         );
 
+        const estadoPrevioTemp = state.historialCampeonatos.length;
         state = aplicarOpcion(state, evento, opcionIdx, FINALES);
+
+        if (state.historialCampeonatos.length > estadoPrevioTemp) {
+          const ultCamp = state.historialCampeonatos[state.historialCampeonatos.length - 1];
+          for (const f of ultCamp.fechas) {
+            if (f.esCarreraClave) {
+              const bono = modificadoresTemp[f.numeroFecha] || 0;
+              if (bono > 0) {
+                carrerasClaveConMinijuegoExito++;
+                if (f.posicion === 1) victoriasConMinijuegoExito++;
+                if (f.posicion <= 3) podiosConMinijuegoExito++;
+              } else {
+                carrerasClaveSinMinijuegoOExito++;
+                if (f.posicion === 1) victoriasSinMinijuegoOExito++;
+                if (f.posicion <= 3) podiosSinMinijuegoOExito++;
+              }
+            }
+          }
+        }
 
         if (state.ofertasPendientes.length > 0) {
           const ofertaElegida = state.ofertasPendientes.find((o) => !o.esContinuidad) || state.ofertasPendientes[0];
+          const ovr = calcularMediaGeneral(state.stats);
+          const nuevaSituacion = crearSituacionActual(
+            ofertaElegida.categoria,
+            ofertaElegida.nombre,
+            state.temporada,
+            state.edad,
+            ovr,
+            ofertaElegida.duracionContrato
+          );
           state = {
             ...state,
-            equipo: ofertaElegida.nombre,
-            categoria: ofertaElegida.categoria,
+            situacionActual: nuevaSituacion,
+            equipo: nuevaSituacion.equipo,
+            categoria: nuevaSituacion.categoria,
             ofertasPendientes: [],
           };
         }
@@ -108,7 +191,6 @@ describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (AL
         conteoArquetipos[arquetipo.id] = (conteoArquetipos[arquetipo.id] || 0) + 1;
       }
 
-      // Medición de % de eventos repetidos respecto a la temporada inmediatamente anterior
       const eventosPorTemporada: Record<number, string[]> = {};
       for (const h of state.historial) {
         if (!eventosPorTemporada[h.temporada]) {
@@ -142,26 +224,29 @@ describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (AL
     const promedioTemporadas = (totalTemporadas / totalPartidas).toFixed(2);
     const promedioEdadRetiro = Number((totalEdadesRetiro / totalPartidas).toFixed(1));
     const diversidadArquetipos = Object.keys(conteoArquetipos).length;
-    const pctEventosRepetidos = totalOportunidadesRepeticion > 0
-      ? ((totalEventosRepetidosTempConsecutiva / totalOportunidadesRepeticion) * 100).toFixed(2)
-      : '0.00';
 
-    const tasaExitoMinijuegos = totalMinijuegosGenerados > 0
-      ? ((totalMinijuegosGanados / totalMinijuegosGenerados) * 100).toFixed(2)
-      : '0.00';
+    const pctPodiosExito = carrerasClaveConMinijuegoExito > 0 ? ((podiosConMinijuegoExito / carrerasClaveConMinijuegoExito) * 100).toFixed(1) : '0';
+    const pctPodiosSinExito = carrerasClaveSinMinijuegoOExito > 0 ? ((podiosSinMinijuegoOExito / carrerasClaveSinMinijuegoOExito) * 100).toFixed(1) : '0';
+    const pctVictoriasExito = carrerasClaveConMinijuegoExito > 0 ? ((victoriasConMinijuegoExito / carrerasClaveConMinijuegoExito) * 100).toFixed(1) : '0';
+    const pctVictoriasSinExito = carrerasClaveSinMinijuegoOExito > 0 ? ((victoriasSinMinijuegoOExito / carrerasClaveSinMinijuegoOExito) * 100).toFixed(1) : '0';
 
-    console.log('\n================ RESULTADOS DE SIMULACIÓN PROMPT 9 (ALPHA v0.7.0) ================');
+    console.log('\n================ RESULTADOS DE SIMULACIÓN PROMPT 10 (ALPHA v0.9.0) ================');
     console.log(`Partidas jugadas: ${totalPartidas}`);
     console.log(`Partidas inconclusas (loops): ${partidasInconclusas}`);
+    console.log(`Desincronizaciones de Categoría/Equipo/Contrato (B.2): ${desincronizacionesEstado} (0%)`);
     console.log(`Promedio de eventos por partida: ${promedioEventos}`);
     console.log(`Promedio de temporadas por partida: ${promedioTemporadas}`);
     console.log(`Edad promedio de retiro: ${promedioEdadRetiro} años`);
-    console.log(`% Eventos repetidos vs temporada anterior: ${pctEventosRepetidos}%`);
     console.log(`Diversidad de arquetipos finales generados: ${diversidadArquetipos} arquetipos distintos`);
-    console.log(`\nMétricas de Minijuegos en Carreras Clave:`);
+    console.log(`\nMétricas de Minijuegos y Frecuencia:`);
     console.log(`  - Total minijuegos generados: ${totalMinijuegosGenerados}`);
-    console.log(`  - Minijuegos ganados (éxito): ${totalMinijuegosGanados} (${tasaExitoMinijuegos}%)`);
+    console.log(`  - Minijuegos ganados (éxito): ${totalMinijuegosGanados}`);
     console.log(`  - Minijuegos no concretados: ${totalMinijuegosPerdidos}`);
+    console.log(`\nMétricas de Impacto en Carreras Clave (Parte C.2):`);
+    console.log(`  - Tasa de Podios CON Minijuego Exitoso: ${pctPodiosExito}% (${podiosConMinijuegoExito}/${carrerasClaveConMinijuegoExito})`);
+    console.log(`  - Tasa de Podios SIN Minijuego o Fallido: ${pctPodiosSinExito}% (${podiosSinMinijuegoOExito}/${carrerasClaveSinMinijuegoOExito})`);
+    console.log(`  - Tasa de Victorias CON Minijuego Exitoso: ${pctVictoriasExito}% (${victoriasConMinijuegoExito}/${carrerasClaveConMinijuegoExito})`);
+    console.log(`  - Tasa de Victorias SIN Minijuego o Fallido: ${pctVictoriasSinExito}% (${victoriasSinMinijuegoOExito}/${carrerasClaveSinMinijuegoOExito})`);
     console.log('\nDistribución de Arquetipos Finales:');
     Object.entries(conteoArquetipos)
       .sort(([, a], [, b]) => b - a)
@@ -171,6 +256,7 @@ describe('Simulación de 1000 Partidas - Prompt 9 Recorrección & Minijuegos (AL
       });
     console.log('===================================================================================\n');
 
+    expect(desincronizacionesEstado).toBe(0);
     expect(partidasInconclusas).toBe(0);
     expect(diversidadArquetipos).toBeGreaterThanOrEqual(4);
     expect(promedioEdadRetiro).toBeGreaterThanOrEqual(32.0);

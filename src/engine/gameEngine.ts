@@ -12,6 +12,8 @@ import {
   ResumenCampeonato,
   OfertaEquipo,
   OpcionConsecuencia,
+  Contrato,
+  SituacionActual,
 } from './types';
 import { createRNG } from './rng';
 import { EQUIPOS_KARTING, EquipoKarting } from '../data/equiposKarting';
@@ -21,6 +23,59 @@ import { EQUIPOS_F1 } from '../data/equipos/equiposF1';
 import { EQUIPOS_F2 } from '../data/equipos/equiposF2';
 import { EQUIPOS_F3, EQUIPOS_FRECA, EQUIPOS_F4, EQUIPOS_FORMULA_NACIONAL } from '../data/equipos/equiposF3';
 import { evaluarArquetipoFinal } from '../data/arquetiposFinales';
+
+export function calcularDuracionContrato(edad: number, ovr: number): number {
+  if (edad < 18) {
+    return ovr >= 60 ? 2 : 1;
+  } else if (edad <= 24) {
+    return ovr >= 75 ? 3 : 2;
+  } else if (edad <= 32) {
+    return ovr >= 85 ? 4 : ovr >= 70 ? 3 : 2;
+  } else {
+    return ovr >= 75 ? 2 : 1;
+  }
+}
+
+export function crearContrato(
+  equipo: string,
+  categoria: Categoria,
+  temporadaInicio: number,
+  edad: number,
+  ovr: number,
+  duracionCustom?: number
+): Contrato {
+  const duracionTotal = duracionCustom || calcularDuracionContrato(edad, ovr);
+  return {
+    equipo,
+    categoria,
+    temporadaInicio,
+    duracionTotal,
+    duracionRestante: duracionTotal,
+    temporadaVencimiento: temporadaInicio + duracionTotal,
+  };
+}
+
+export function crearSituacionActual(
+  categoria: Categoria,
+  equipo: string,
+  temporadaInicio: number,
+  edad: number,
+  ovr: number,
+  duracionCustom?: number
+): SituacionActual {
+  const contrato = crearContrato(equipo, categoria, temporadaInicio, edad, ovr, duracionCustom);
+  return {
+    categoria,
+    equipo,
+    contrato,
+  };
+}
+
+export const CURVAS_PROBABILIDAD_FAMA_POPULARIDAD = {
+  acertada: { probPositivo: 0.80, probNeutro: 0.15, probNegativo: 0.05 },
+  intermedia: { probPositivo: 0.25, probNeutro: 0.50, probNegativo: 0.25 },
+  desacertada: { probPositivo: 0.10, probNeutro: 0.20, probNegativo: 0.70 },
+};
 
 export function calcularMediaGeneral(stats: PlayerStats): number {
   const suma =
@@ -45,14 +100,24 @@ export function createInitialState(
   const equipoKartingObj: EquipoKarting =
     EQUIPOS_KARTING.find((e) => e.id === equipoKartingId) || EQUIPOS_KARTING[0];
 
+  const situacionInicial = crearSituacionActual(
+    'Karting Regional',
+    equipoKartingObj.nombre,
+    1,
+    9,
+    45,
+    1
+  );
+
   return {
     nombre,
     nacionalidad,
     rivalNombre,
     edad: 9,
     temporada: 1,
-    categoria: 'Karting Regional',
-    equipo: equipoKartingObj.nombre,
+    situacionActual: situacionInicial,
+    categoria: situacionInicial.categoria,
+    equipo: situacionInicial.equipo,
     equipoKartingId: equipoKartingObj.id,
     stats: {
       velocidad: 45,
@@ -81,6 +146,7 @@ export function createInitialState(
       ordenesIgnoradas: 0,
       escandalosMediaticos: 0,
     },
+    superlicenciaObtenida: false,
   };
 }
 
@@ -142,7 +208,10 @@ export function esEventoElegible(
     return false;
   }
 
-  if (evento.id.includes('superlicencia') && state.categoria === 'Fórmula 1') {
+  const catActual = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+  const tieneSuperlicencia = state.superlicenciaObtenida || (state.tagsHistorial && state.tagsHistorial['superlicenciaObtenida'] > 0);
+
+  if (evento.id.includes('superlicencia') && (catActual === 'Fórmula 1' || tieneSuperlicencia)) {
     return false;
   }
 
@@ -326,22 +395,33 @@ export function generarOfertasEscuderias(
   state: PlayerState,
   categoriaDestino: Categoria
 ): OfertaEquipo[] {
-  const rngSeed = `${state.seed}_offers_${state.temporada}_${categoriaDestino}`;
+  const ovr = calcularMediaGeneral(state.stats);
+  let catEfectiva = categoriaDestino;
+
+  const tieneSuperlicencia =
+    state.superlicenciaObtenida || (state.tagsHistorial && state.tagsHistorial['superlicenciaObtenida'] > 0);
+  
+  const catActual = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+  if (tieneSuperlicencia && catActual !== 'Fórmula 1' && (ovr >= 50 || state.stats.velocidad >= 65)) {
+    catEfectiva = 'Fórmula 1';
+  }
+
+  const rngSeed = `${state.seed}_offers_${state.temporada}_${catEfectiva}`;
   const getRandom = createRNG(rngSeed);
 
   let poolEquipos: Array<{ id: string; nombre: string; pais?: string; nivelRendimiento: number }> = [];
 
-  if (categoriaDestino === 'Fórmula 1') {
+  if (catEfectiva === 'Fórmula 1') {
     poolEquipos = EQUIPOS_F1;
-  } else if (categoriaDestino === 'FIA Fórmula 2') {
+  } else if (catEfectiva === 'FIA Fórmula 2') {
     poolEquipos = EQUIPOS_F2;
-  } else if (categoriaDestino === 'FIA Fórmula 3') {
+  } else if (catEfectiva === 'FIA Fórmula 3') {
     poolEquipos = EQUIPOS_F3;
-  } else if (categoriaDestino === 'Formula Regional Europea') {
+  } else if (catEfectiva === 'Formula Regional Europea') {
     poolEquipos = EQUIPOS_FRECA;
-  } else if (categoriaDestino.includes('Fórmula 4')) {
+  } else if (catEfectiva.includes('Fórmula 4')) {
     poolEquipos = EQUIPOS_F4;
-  } else if (categoriaDestino === 'Fórmula Nacional') {
+  } else if (catEfectiva === 'Fórmula Nacional') {
     poolEquipos = EQUIPOS_FORMULA_NACIONAL;
   } else {
     poolEquipos = EQUIPOS_KARTING.map((e) => ({
@@ -352,7 +432,6 @@ export function generarOfertasEscuderias(
     }));
   }
 
-  // Filtrado por reputación / escándalos mediáticos (B.4)
   const escandalos = state.tagsHistorial['escandalosMediaticos'] || 0;
   if (escandalos >= 2) {
     poolEquipos = poolEquipos.filter((e) => e.nivelRendimiento <= 88);
@@ -361,10 +440,12 @@ export function generarOfertasEscuderias(
   const mezclados = [...poolEquipos].sort(() => getRandom() - 0.5);
   const seleccion = mezclados.slice(0, 3);
 
+  const duracionDur = calcularDuracionContrato(state.edad + 1, ovr);
+
   const ofertasNuevas: OfertaEquipo[] = seleccion.map((eq, idx) => ({
     id: eq.id,
     nombre: eq.nombre,
-    categoria: categoriaDestino,
+    categoria: catEfectiva,
     pais: eq.pais || 'Internacional',
     nivelRendimiento: eq.nivelRendimiento,
     expectativas:
@@ -374,20 +455,28 @@ export function generarOfertasEscuderias(
         ? 'Consistencia y Puntos'
         : 'Desarrollo de Monoplaza',
     prestigioFamaBonus: Math.round(eq.nivelRendimiento / 10),
+    duracionContrato: duracionDur,
   }));
 
-  const ofertaContinuidad: OfertaEquipo = {
-    id: 'continuidad-equipo-actual',
-    nombre: state.equipo || 'Escudería Actual',
-    categoria: state.categoria,
-    pais: 'Actual',
-    nivelRendimiento: 80,
-    expectativas: 'Consolidación de Contrato',
-    prestigioFamaBonus: 5,
-    esContinuidad: true,
-  };
+  const equipoActual = state.situacionActual ? state.situacionActual.equipo : (state.equipo || 'Escudería Actual');
+  const ofertasFinales: OfertaEquipo[] = [...ofertasNuevas];
 
-  return [ofertaContinuidad, ...ofertasNuevas];
+  if (catEfectiva === catActual) {
+    const ofertaContinuidad: OfertaEquipo = {
+      id: 'continuidad-equipo-actual',
+      nombre: equipoActual,
+      categoria: catActual,
+      pais: 'Actual',
+      nivelRendimiento: 80,
+      expectativas: 'Consolidación de Contrato',
+      prestigioFamaBonus: 5,
+      esContinuidad: true,
+      duracionContrato: duracionDur,
+    };
+    ofertasFinales.unshift(ofertaContinuidad);
+  }
+
+  return ofertasFinales;
 }
 
 export function aplicarDecliveEdad(state: PlayerState): PlayerStats {
@@ -444,6 +533,7 @@ export function simularFechaCarrera(
     vueltaRapida,
     abandono,
     esCarreraClave: fecha.esCarreraClave,
+    esMojado: fecha.esMojado,
     puntos,
   };
 }
@@ -452,7 +542,9 @@ export function simularCarrerasRestantes(
   state: PlayerState,
   modificadoresMinijuegos: Record<number, number> = {}
 ): ResumenCampeonato {
-  const calendario = CALENDARIOS_POR_CATEGORIA[state.categoria] || CALENDARIOS_POR_CATEGORIA['Karting Regional'];
+  const catActual = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+  const equipoActual = state.situacionActual ? state.situacionActual.equipo : (state.equipo || 'Independiente');
+  const calendario = CALENDARIOS_POR_CATEGORIA[catActual] || CALENDARIOS_POR_CATEGORIA['Karting Regional'];
   const fechasResultados: ResultadoFecha[] = calendario.map((fecha) =>
     simularFechaCarrera(state, fecha, modificadoresMinijuegos[fecha.numeroFecha] || 0)
   );
@@ -465,13 +557,13 @@ export function simularCarrerasRestantes(
   const puntosTotales = fechasResultados.reduce((acc, f) => acc + f.puntos, 0);
 
   const posicionFinal = Math.max(1, Math.min(10, Math.round(11 - puntosTotales / 15)));
-  const siguienteCat = obtenerSiguienteCategoria(state.categoria);
+  const siguienteCat = obtenerSiguienteCategoria(catActual);
   const ofertasObj = generarOfertasEscuderias(state, siguienteCat);
 
   return {
     temporada: state.temporada,
-    categoria: state.categoria,
-    equipo: state.equipo || 'Independiente',
+    categoria: catActual,
+    equipo: equipoActual,
     posicionFinal,
     puntosTotales,
     victorias,
@@ -490,17 +582,20 @@ export function resolverFinDeTemporada(
 ): PlayerState {
   const resumenAño = simularCarrerasRestantes(state, modificadoresMinijuegos);
   const ovr = calcularMediaGeneral(state.stats);
-
   const nuevasStats = aplicarDecliveEdad(state);
 
-  let nuevaCategoria = state.categoria;
-  const idxActual = CATEGORIAS_ORDEN.indexOf(state.categoria);
+  const catActual = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+  const equipoActual = state.situacionActual ? state.situacionActual.equipo : (state.equipo || 'Independiente');
+
+  let nuevaCategoria = catActual;
+  const idxActual = CATEGORIAS_ORDEN.indexOf(catActual);
 
   if ((ovr >= 50 || resumenAño.posicionFinal <= 5) && idxActual < CATEGORIAS_ORDEN.length - 1) {
     nuevaCategoria = CATEGORIAS_ORDEN[idxActual + 1];
   }
 
   const nuevaEdad = state.edad + 1;
+  const nuevaTemporada = state.temporada + 1;
   let finalizado = state.finalizado;
   let finalObtenido = state.finalObtenido;
 
@@ -511,13 +606,36 @@ export function resolverFinDeTemporada(
     finalObtenido = 'final-estancado-inferiores';
   }
 
-  const ofertasGeneradas = generarOfertasEscuderias(state, nuevaCategoria);
+  const contratoActual = state.situacionActual ? state.situacionActual.contrato : crearContrato(equipoActual, catActual, state.temporada, state.edad, ovr, 1);
+  const duracionRestanteNueva = contratoActual.temporadaVencimiento - nuevaTemporada;
+  const contratoVencido = duracionRestanteNueva <= 0;
+  const cambioCategoria = nuevaCategoria !== catActual;
+  const tieneSuperlicenciaF1 = (state.superlicenciaObtenida || (state.tagsHistorial && state.tagsHistorial['superlicenciaObtenida'] > 0)) && catActual !== 'Fórmula 1' && ovr >= 50;
+
+  let ofertasGeneradas: OfertaEquipo[] = [];
+  let situacionSiguiente: SituacionActual = state.situacionActual;
+
+  if (contratoVencido || cambioCategoria || tieneSuperlicenciaF1) {
+    ofertasGeneradas = generarOfertasEscuderias(state, nuevaCategoria);
+  } else {
+    const contratoActualizado: Contrato = {
+      ...contratoActual,
+      duracionRestante: duracionRestanteNueva,
+    };
+    situacionSiguiente = {
+      categoria: catActual,
+      equipo: equipoActual,
+      contrato: contratoActualizado,
+    };
+  }
 
   return {
     ...state,
     stats: nuevasStats,
-    categoria: state.categoria,
-    temporada: state.temporada + 1,
+    situacionActual: situacionSiguiente,
+    categoria: situacionSiguiente.categoria,
+    equipo: situacionSiguiente.equipo,
+    temporada: nuevaTemporada,
     edad: nuevaEdad,
     eventosUsadosTemporadaActual: [],
     historialCampeonatos: [...state.historialCampeonatos, resumenAño],
@@ -557,6 +675,57 @@ export function aplicarOpcion(
     }
   }
 
+  // Rediseño de resolución probabilística en 3 niveles para eventos de Fama/Popularidad (Parte E.2)
+  if (
+    evento.categoriaEvento === 'prensa' ||
+    evento.categoriaEvento === 'mercado' ||
+    (opcion.consecuencias.stats && (opcion.consecuencias.stats.fama !== undefined || opcion.consecuencias.stats.popularidad !== undefined))
+  ) {
+    const rngSeed = `${state.seed}_fama_${state.historial.length}_${evento.id}`;
+    const getRandom = createRNG(rngSeed);
+    
+    let nivelRespuesta: 'acertada' | 'intermedia' | 'desacertada' = 'intermedia';
+    const numOpciones = evento.opciones.length;
+    if (numOpciones === 2) {
+      const esOpcion0Acertada = getRandom() < 0.5;
+      if (opcionIndex === 0) {
+        nivelRespuesta = esOpcion0Acertada ? 'acertada' : 'desacertada';
+      } else {
+        nivelRespuesta = esOpcion0Acertada ? 'desacertada' : 'acertada';
+      }
+    } else {
+      const niveles: Array<'acertada' | 'intermedia' | 'desacertada'> = ['acertada', 'intermedia', 'desacertada'];
+      const idxAsignado = Math.floor(getRandom() * 3);
+      nivelRespuesta = niveles[(opcionIndex + idxAsignado) % 3];
+    }
+
+    const curva = CURVAS_PROBABILIDAD_FAMA_POPULARIDAD[nivelRespuesta];
+    const rollResultado = getRandom();
+
+    let factorMultiplicador = 1;
+    if (rollResultado < curva.probPositivo) {
+      factorMultiplicador = 1;
+    } else if (rollResultado < curva.probPositivo + curva.probNeutro) {
+      factorMultiplicador = 0;
+    } else {
+      factorMultiplicador = -1;
+    }
+
+    if (consecuencias.stats) {
+      const statsObj = { ...consecuencias.stats };
+      if (statsObj.fama !== undefined) {
+        statsObj.fama = factorMultiplicador === 0 ? 0 : Math.abs(statsObj.fama) * factorMultiplicador;
+      }
+      if (statsObj.popularidad !== undefined) {
+        statsObj.popularidad = factorMultiplicador === 0 ? 0 : Math.abs(statsObj.popularidad) * factorMultiplicador;
+      }
+      consecuencias = {
+        ...consecuencias,
+        stats: statsObj,
+      };
+    }
+  }
+
   const nuevasStats: PlayerStats = { ...state.stats };
 
   if (consecuencias.stats) {
@@ -570,26 +739,38 @@ export function aplicarOpcion(
     });
   }
 
-  let nuevaCategoria = state.categoria;
+  const catActual = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+  let nuevaCategoria = catActual;
   if (consecuencias.avanzaCategoria) {
-    nuevaCategoria = obtenerSiguienteCategoria(state.categoria);
+    nuevaCategoria = obtenerSiguienteCategoria(catActual);
   }
 
+  const equipoActual = state.situacionActual ? state.situacionActual.equipo : (state.equipo || 'Independiente');
   const nuevoEquipo =
     consecuencias.cambioEquipo !== undefined
-      ? consecuencias.cambioEquipo
-      : state.equipo;
+      ? (consecuencias.cambioEquipo || 'Independiente')
+      : equipoActual;
+
+  const ovrActual = calcularMediaGeneral(nuevasStats);
+  let nuevaSituacion: SituacionActual = state.situacionActual;
+  if (nuevaCategoria !== catActual || nuevoEquipo !== equipoActual) {
+    nuevaSituacion = crearSituacionActual(nuevaCategoria, nuevoEquipo, state.temporada, state.edad, ovrActual);
+  }
 
   const nuevoJuegoSucioCount =
     state.juegoSucioCount + (consecuencias.incrementaJuegoSucio ? 1 : 0);
 
-  // Registro de consecuencias diferidas (B.4)
   const nuevosTags = { ...state.tagsHistorial };
   if (consecuencias.tagHistorial) {
     nuevosTags[consecuencias.tagHistorial] = (nuevosTags[consecuencias.tagHistorial] || 0) + 1;
   }
-  if (consecuencias.cambioEquipo === state.equipo) {
+  if (consecuencias.cambioEquipo === equipoActual) {
     nuevosTags['lealtadEquipo'] = (nuevosTags['lealtadEquipo'] || 0) + 1;
+  }
+
+  let superlicenciaObtenida = state.superlicenciaObtenida || false;
+  if (consecuencias.tagHistorial === 'superlicenciaObtenida' || evento.id.includes('superlicencia')) {
+    superlicenciaObtenida = true;
   }
 
   const textoResultadoConRival = interpolarTexto(consecuencias.textoResultado, state);
@@ -597,9 +778,11 @@ export function aplicarOpcion(
   let estadoConHistorial: PlayerState = {
     ...state,
     stats: nuevasStats,
-    categoria: nuevaCategoria,
-    equipo: nuevoEquipo,
+    situacionActual: nuevaSituacion,
+    categoria: nuevaSituacion.categoria,
+    equipo: nuevaSituacion.equipo,
     tagsHistorial: nuevosTags,
+    superlicenciaObtenida,
     eventosVistos: [...state.eventosVistos, evento.id],
     eventosUsadosTemporadaActual: [...state.eventosUsadosTemporadaActual, evento.id],
     juegoSucioCount: nuevoJuegoSucioCount,
@@ -611,13 +794,13 @@ export function aplicarOpcion(
         opcionTexto: opcion.texto,
         textoResultado: textoResultadoConRival,
         statsDeltas: consecuencias.stats || {},
-        categoria: state.categoria,
+        categoria: nuevaSituacion.categoria,
         temporada: state.temporada,
       },
     ],
   };
 
-  const maxEventos = cantidadCarrerasClave(state.categoria);
+  const maxEventos = cantidadCarrerasClave(nuevaSituacion.categoria);
   const temporadaCompletada = estadoConHistorial.eventosUsadosTemporadaActual.length >= maxEventos;
 
   if (consecuencias.avanzaCategoria || temporadaCompletada) {

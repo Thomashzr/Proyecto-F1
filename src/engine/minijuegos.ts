@@ -3,7 +3,9 @@ import { FechaCalendario } from '../data/calendarios';
 import { createRNG } from './rng';
 import { clamp } from './gameEngine';
 
-export const PROBABILIDAD_APARICION_MINIJUEGO = 0.50; // 50% de aparicion en carreras clave
+export const PROBABILIDAD_APARICION_ARGENTINA = 0.95; // 95% en categorías argentinas
+export const PROBABILIDAD_APARICION_INTERNACIONAL = 0.85; // 85% en internacionales
+export const PROBABILIDAD_APARICION_MINIJUEGO = 0.85;
 
 export function generarMinijuegoParaCarrera(
   state: PlayerState,
@@ -14,7 +16,15 @@ export function generarMinijuegoParaCarrera(
   const seedStr = `${state.seed}_mg_gen_${state.temporada}_${fecha.numeroFecha}`;
   const getRandom = createRNG(seedStr);
 
-  if (getRandom() > PROBABILIDAD_APARICION_MINIJUEGO) {
+  const catActual = state.situacionActual ? state.situacionActual.categoria : state.categoria;
+  const probAparicion =
+    catActual === 'Karting Regional' ||
+    catActual === 'Karting Nacional' ||
+    catActual === 'Fórmula Nacional'
+      ? PROBABILIDAD_APARICION_ARGENTINA
+      : PROBABILIDAD_APARICION_INTERNACIONAL;
+
+  if (getRandom() > probAparicion) {
     return null;
   }
 
@@ -126,7 +136,7 @@ export function resolverMinijuego(
   const probExito = opcion.esOptimo ? 0.80 : 0.30;
   const exito = getRandom() < probExito;
 
-  const bonoModificadorScore = exito ? 20 : 0;
+  const bonoModificadorScore = exito ? 45 : 0;
   const statBonus = exito ? { stat: contexto.habilidadRecompensada, cantidad: 1 } : undefined;
 
   let nuevasStats = { ...state.stats };

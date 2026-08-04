@@ -5,10 +5,14 @@ import {
   calcularMediaGeneral,
   interpolarTexto,
   cantidadCarrerasClave,
+  calcularDuracionContrato,
+  crearSituacionActual,
+  generarOfertasEscuderias,
+  resolverFinDeTemporada,
 } from '../src/engine/gameEngine';
 import { createRNG } from '../src/engine/rng';
 import { evaluarArquetipoFinal } from '../src/data/arquetiposFinales';
-import { Evento } from '../src/engine/types';
+import { Evento, OfertaEquipo } from '../src/engine/types';
 import { useGameStore } from '../src/store/useGameStore';
 
 describe('RNG & Seed System', () => {
@@ -56,8 +60,9 @@ describe('Motor de Juego - OVR y Utilidades ALPHA v0.6.0', () => {
 describe('Arquetipos de Finales Dinámicos', () => {
   it('evalúa dinámicamente un arquetipo final e interpola el nombre del piloto y equipo', () => {
     const state = createInitialState('Franco Colapinto', 'Argentina', 'buenos-aires-racing', 'seed_test');
-    state.categoria = 'Fórmula 1';
-    state.equipo = 'Oracle Red Bull Racing';
+    state.situacionActual = crearSituacionActual('Fórmula 1', 'Oracle Red Bull Racing', 1, 25, 85, 3);
+    state.categoria = state.situacionActual.categoria;
+    state.equipo = state.situacionActual.equipo;
     state.stats.velocidad = 85;
     state.stats.consistencia = 80;
 
@@ -335,5 +340,134 @@ describe('Prompt 9 - Parte A: Verificación de Fixes (A.1, A.2, A.3, A.4)', () =
     state.categoria = 'FIA Fórmula 2';
     state.eventosVistos.push('f2-superlicencia-f1');
     expect(esEventoElegible(eventoSuperlic, state)).toBe(false);
+  });
+});
+
+describe('Prompt 10 - Parte A & B: Sistema de Contratos y Sincronización Estructural (B.2)', () => {
+  it('calcula la duración de contrato según edad y OVR de forma parametrizable', () => {
+    expect(calcularDuracionContrato(15, 50)).toBe(1);
+    expect(calcularDuracionContrato(15, 65)).toBe(2);
+    expect(calcularDuracionContrato(22, 80)).toBe(3);
+    expect(calcularDuracionContrato(28, 88)).toBe(4);
+    expect(calcularDuracionContrato(35, 70)).toBe(1);
+  });
+
+  it('B.2 - Test de Evidencia Obligatorio: la situación actual agrupa categoría, equipo y contrato de forma atómica y sincronizada', () => {
+    const store = useGameStore.getState();
+    store.iniciarJuego('Piloto Sincro', 'Argentina', 'buenos-aires-racing', 'seed_sincro_b2');
+
+    const stateInicial = useGameStore.getState().playerState!;
+    expect(stateInicial.situacionActual).toBeDefined();
+    expect(stateInicial.situacionActual.categoria).toBe(stateInicial.categoria);
+    expect(stateInicial.situacionActual.equipo).toBe(stateInicial.equipo);
+    expect(stateInicial.situacionActual.contrato.categoria).toBe(stateInicial.categoria);
+    expect(stateInicial.situacionActual.contrato.equipo).toBe(stateInicial.equipo);
+
+    const ofertaF4: OfertaEquipo = {
+      id: 'campos-f4',
+      nombre: 'Campos Racing F4',
+      categoria: 'Fórmula 4 España',
+      pais: 'España',
+      nivelRendimiento: 85,
+      expectativas: 'Podios',
+      prestigioFamaBonus: 8,
+      duracionContrato: 3,
+    };
+
+    store.elegirOfertaEquipo(ofertaF4);
+    const stateActualizado = useGameStore.getState().playerState!;
+
+    expect(stateActualizado.situacionActual.categoria).toBe('Fórmula 4 España');
+    expect(stateActualizado.situacionActual.equipo).toBe('Campos Racing F4');
+    expect(stateActualizado.situacionActual.contrato.categoria).toBe('Fórmula 4 España');
+    expect(stateActualizado.situacionActual.contrato.equipo).toBe('Campos Racing F4');
+    expect(stateActualizado.situacionActual.contrato.duracionTotal).toBe(3);
+    expect(stateActualizado.categoria).toBe(stateActualizado.situacionActual.categoria);
+    expect(stateActualizado.equipo).toBe(stateActualizado.situacionActual.equipo);
+  });
+
+  it('Parte A: permanece automáticamente en el equipo mientras el contrato está vigente sin generar ofertas redundantes', () => {
+    const state = createInitialState('Piloto Contrato', 'Argentina', 'buenos-aires-racing', 'seed_contrato_vigente');
+    state.situacionActual = crearSituacionActual('Fórmula 4 España', 'Campos Racing F4', 1, 16, 60, 3);
+    state.categoria = state.situacionActual.categoria;
+    state.equipo = state.situacionActual.equipo;
+
+    const estadoSiguiente = resolverFinDeTemporada(state);
+    expect(estadoSiguiente.situacionActual.equipo).toBe('Campos Racing F4');
+    expect(estadoSiguiente.situacionActual.contrato.duracionRestante).toBe(2);
+    expect(estadoSiguiente.ofertasPendientes.length).toBe(0);
+  });
+});
+
+describe('Prompt 10 - Parte D.2: Superlicencia y Exclusividad', () => {
+  it('habilita ofertas reales de F1 al obtener Superlicencia FIA', () => {
+    const state = createInitialState('Piloto F2', 'Argentina', 'buenos-aires-racing', 'seed_superlic_f1');
+    state.categoria = 'FIA Fórmula 2';
+    state.situacionActual = crearSituacionActual('FIA Fórmula 2', 'MP Motorsport F2', 1, 20, 75, 1);
+    state.stats.velocidad = 78;
+    state.superlicenciaObtenida = true;
+
+    const ofertas = generarOfertasEscuderias(state, 'FIA Fórmula 2');
+    const contieneOfertaF1 = ofertas.some((o) => o.categoria === 'Fórmula 1');
+    expect(contieneOfertaF1).toBe(true);
+  });
+
+  it('no vuelve a disparar el evento de Superlicencia si ya fue obtenido o el piloto ya está en F1', () => {
+    const state = createInitialState('Piloto F1', 'Argentina', 'buenos-aires-racing', 'seed_no_repeat_superlic');
+    const eventoSuperlic: Evento = {
+      id: 'f2-superlicencia-f1',
+      tipo: 'extradeportivo',
+      peso: 35,
+      titulo: 'Puntos de Superlicencia FIA Completados',
+      descripcion: 'Test',
+      opciones: [],
+    };
+
+    state.superlicenciaObtenida = true;
+    expect(esEventoElegible(eventoSuperlic, state)).toBe(false);
+
+    state.superlicenciaObtenida = false;
+    state.categoria = 'Fórmula 1';
+    state.situacionActual = crearSituacionActual('Fórmula 1', 'Ferrari', 1, 22, 85, 2);
+    expect(esEventoElegible(eventoSuperlic, state)).toBe(false);
+  });
+});
+
+describe('Prompt 10 - Parte D.3: Pruebas de Evidencia por cada Arquetipo Final', () => {
+  it('valida otorgamiento y denegación de Campeón Invicto de F1 contra estadísticas reales', () => {
+    const statePos = createInitialState('Campeón Real', 'Argentina', 'buenos-aires-racing', 'seed_invic');
+    statePos.categoria = 'Fórmula 1';
+    statePos.situacionActual = crearSituacionActual('Fórmula 1', 'Red Bull', 1, 25, 90, 3);
+    statePos.historialCampeonatos = [
+      {
+        temporada: 5,
+        categoria: 'Fórmula 1',
+        equipo: 'Red Bull',
+        posicionFinal: 1,
+        puntosTotales: 75,
+        victorias: 3,
+        podios: 3,
+        poles: 3,
+        vueltasRapidas: 3,
+        abandonos: 0,
+        fechas: [
+          { numeroFecha: 1, nombreGranPremio: 'GP1', circuito: 'C1', posicion: 1, pole: true, vueltaRapida: true, abandono: false, esCarreraClave: true, puntos: 25 },
+          { numeroFecha: 2, nombreGranPremio: 'GP2', circuito: 'C2', posicion: 1, pole: true, vueltaRapida: true, abandono: false, esCarreraClave: true, puntos: 25 },
+          { numeroFecha: 3, nombreGranPremio: 'GP3', circuito: 'C3', posicion: 1, pole: true, vueltaRapida: true, abandono: false, esCarreraClave: true, puntos: 25 },
+        ],
+        ofertasSiguienteTemporada: [],
+      },
+    ];
+
+    expect(evaluarArquetipoFinal(statePos).id).toBe('campeon-invicto-f1');
+
+    const stateNeg = { ...statePos };
+    stateNeg.historialCampeonatos = [
+      {
+        ...statePos.historialCampeonatos[0],
+        victorias: 2,
+      },
+    ];
+    expect(evaluarArquetipoFinal(stateNeg).id).not.toBe('campeon-invicto-f1');
   });
 });

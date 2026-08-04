@@ -99,7 +99,9 @@ export const ScreenResultado: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono">
             <div className="bg-asfalto border border-asfalto-border p-2.5 rounded">
               <span className="text-[10px] text-telemetria block">CATEGORÍA</span>
-              <span className="text-xs font-bold text-white uppercase">{playerState.categoria}</span>
+              <span className="text-xs font-bold text-white uppercase">
+                {playerState.situacionActual ? playerState.situacionActual.categoria : playerState.categoria}
+              </span>
             </div>
             <div className="bg-asfalto border border-asfalto-border p-2.5 rounded">
               <span className="text-[10px] text-telemetria block">VELOCIDAD</span>

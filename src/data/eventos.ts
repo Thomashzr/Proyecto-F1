@@ -711,4 +711,108 @@ export const EVENTOS: Evento[] = [
       },
     ],
   },
+
+  // ==========================================
+  // EVENTOS REDISEÑADOS DE FAMA / POPULARIDAD (Prompt 10 - E.2)
+  // ==========================================
+  {
+    id: 'prensa-01-podcast-estelar',
+    tipo: 'extradeportivo',
+    categoriaEvento: 'prensa',
+    categoriaMinima: 'Fórmula 4 España',
+    peso: 22,
+    titulo: 'Invitación a Podcast Deportivo Internacional',
+    descripcion: 'Un programa de streaming deportivo con millones de oyentes te invita a una entrevista distendida de 2 horas.',
+    opciones: [
+      {
+        texto: 'Revelar anécdotas picantes de vestuario y críticas al ambiente del paddock',
+        consecuencias: {
+          stats: { fama: 12, popularidad: 10 },
+          textoResultado: 'El episodio rompió récords de audiencia. Generaste debate acalorado en redes.',
+        },
+      },
+      {
+        texto: 'Mantener un perfil enfocado 100% en la disciplina, nutrición y telemetría',
+        consecuencias: {
+          stats: { popularidad: 8, fama: 6 },
+          textoResultado: 'Ganaste el respeto de los analistas técnicos por tu seriedad profesional.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'prensa-02-gala-premios-fia',
+    tipo: 'extradeportivo',
+    categoriaEvento: 'prensa',
+    categoriaMinima: 'FIA Fórmula 3',
+    peso: 20,
+    titulo: 'Gala Anual de Premiación y Alfombra Roja',
+    descripcion: 'Asistís a la entrega anual de trofeos luciendo un atuendo vanguardista que acapara las cámaras.',
+    opciones: [
+      {
+        texto: 'Posar con soltura y dedicar unas palabras al público de tu país natal',
+        consecuencias: {
+          stats: { popularidad: 12, fama: 8 },
+          textoResultado: 'La transmisión oficial destacó tu carisma y orgullo nacional.',
+        },
+      },
+      {
+        texto: 'Aprovechar la noche para charlar en privado con directores de equipos rivales',
+        consecuencias: {
+          stats: { fama: 14, popularidad: 4 },
+          textoResultado: 'Causaste intriga en el paddock sobre tu futuro contractual.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'mercado-01-spot-indumentaria',
+    tipo: 'extradeportivo',
+    categoriaEvento: 'mercado',
+    categoriaMinima: 'Fórmula 4 Brasil',
+    peso: 20,
+    titulo: 'Campaña Global de Marca de Indumentaria',
+    descripcion: 'Una renombrada firma de ropa urbana propone convertirte en la cara de su nueva colección.',
+    opciones: [
+      {
+        texto: 'Aceptar el contrato y participar activamente en sesiones fotográficas',
+        consecuencias: {
+          stats: { fama: 15, popularidad: 10 },
+          textoResultado: 'Tus gigantografías aparecieron en centros comerciales de todo el mundo.',
+        },
+      },
+      {
+        texto: 'Priorizar el descanso de pretemporada y delegar la publicidad en tu agente',
+        consecuencias: {
+          stats: { popularidad: 5, fama: 5 },
+          textoResultado: 'Mantuviste el foco en tu entrenamiento físico sin distracciones mediáticas.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'prensa-03-simracing-benefico',
+    tipo: 'extradeportivo',
+    categoriaEvento: 'prensa',
+    categoriaMinima: 'Fórmula Nacional',
+    peso: 22,
+    titulo: 'Torneo Benefactor de Simracing con Streamers',
+    descripcion: 'Te invitan a competir en una carrera virtual benéfica transmitida en vivo para cientos de miles de espectadores.',
+    opciones: [
+      {
+        texto: 'Brindar un show de sobrepasos arriesgados y bromas por micrófono',
+        consecuencias: {
+          stats: { popularidad: 14, fama: 6 },
+          textoResultado: 'La comunidad gamer te adoptó como uno de sus pilotos preferidos.',
+        },
+      },
+      {
+        texto: 'Tomar la competencia virtual con rigor profesional y aplastar a los rivales',
+        consecuencias: {
+          stats: { fama: 10, popularidad: 6 },
+          textoResultado: 'Demostraste tu velocidad indiscutida incluso en el plano digital.',
+        },
+      },
+    ],
+  },
 ];
